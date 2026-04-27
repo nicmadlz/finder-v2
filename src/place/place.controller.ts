@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Get, Param, Post, Put } from "@nestjs/common";
+import { Body, ConflictException, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { PlaceRepository } from "./place.repository";
 import { PlaceEntity } from "./place.entity";
 import { CreatePlaceDTO } from "./dto/CreatePlace.dto";
@@ -32,6 +32,16 @@ export class PlaceController {
         return {
             place: updatedPlace,
             message: "Place updated!"
+        }
+    }
+
+    @Delete("/:id")
+    async deletePlace(@Param("id") id: number){
+        const deletedPlace = await this.placeRepository.delete(id);
+        
+        return {
+            place: deletedPlace,
+            message: "Place deleted!"
         }
     }
 }

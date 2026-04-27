@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PlaceEntity } from "./place.entity";
 
 @Injectable()
@@ -24,14 +24,21 @@ export class PlaceRepository {
         return possiblePlace !== undefined;
     }
 
-    async update(id: number, newData: Partial<PlaceEntity>) {
+    async searchId(id: number){
         const possiblePlace = this.places.find(
             place => place.id === id
         );
 
         if (!possiblePlace) {
-            throw new Error("Place do not exist!")
+            throw new NotFoundException("Place do not exist!")
         }
+
+        return possiblePlace;
+    }
+
+    async update(id: number, newData: Partial<PlaceEntity>) {
+
+        const place = this.searchId(id);
 
         Object.entries(newData).forEach(([key, value]) => {
 
@@ -39,9 +46,20 @@ export class PlaceRepository {
                 return;
             }
 
-            possiblePlace[key] = value;
+            place[key] = value;
         });
 
-        return possiblePlace;
+        return place;
+    }
+
+    async delete(id: number){
+
+        await this.searchId(id);
+
+        this.places = this.places.filter(
+            savePlace => savePlace.id !== id
+        )
+
+        return this.places;
     }
 }

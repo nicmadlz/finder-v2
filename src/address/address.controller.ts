@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Get, Param, Post, Put } from "@nestjs/common";
+import { Body, ConflictException, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { AddressRepository } from "./address.repository";
 import { AddressEntity } from "./address.entity";
 import { CreateAddressDTO } from "./dto/CreateAddress.dto";
@@ -29,7 +29,7 @@ export class AddressController{
     }
 
     @Put("/:id")
-    async updatePlace(@Param("id") id: number, @Body() newData: UpdateAddress) {
+    async updateAddress(@Param("id") id: number, @Body() newData: UpdateAddress) {
 
         const updatedAddress = await this.addressRepository.update(id, newData);
 
@@ -37,5 +37,15 @@ export class AddressController{
             address: updatedAddress,
             message: "Address updated!"
         }
-    }    
+    }
+    
+    @Delete("/:id")
+    async deleteAddress(@Param("id") id: number){
+        const deletedAddress = await this.addressRepository.delete(id);
+
+        return {
+            address: deletedAddress,
+            message: "Address deleted!"
+        }
+    }
 }
