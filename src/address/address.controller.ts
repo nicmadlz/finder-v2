@@ -1,7 +1,8 @@
-import { Body, ConflictException, Controller, Get, Post } from "@nestjs/common";
+import { Body, ConflictException, Controller, Get, Param, Post, Put } from "@nestjs/common";
 import { AddressRepository } from "./address.repository";
 import { AddressEntity } from "./address.entity";
 import { CreateAddressDTO } from "./dto/CreateAddress.dto";
+import { UpdateAddress } from "./dto/UpdateAddress.dto";
 
 @Controller("/addresses")
 export class AddressController{
@@ -26,4 +27,15 @@ export class AddressController{
     async listAddresses(){
         return this.addressRepository.list();
     }
+
+    @Put("/:id")
+    async updatePlace(@Param("id") id: number, @Body() newData: UpdateAddress) {
+
+        const updatedAddress = await this.addressRepository.update(id, newData);
+
+        return {
+            address: updatedAddress,
+            message: "Address updated!"
+        }
+    }    
 }

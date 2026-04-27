@@ -1,17 +1,18 @@
-import { Body, ConflictException, Controller, Get, Post } from "@nestjs/common";
+import { Body, ConflictException, Controller, Get, Param, Post, Put } from "@nestjs/common";
 import { PlaceRepository } from "./place.repository";
 import { PlaceEntity } from "./place.entity";
 import { CreatePlaceDTO } from "./dto/CreatePlace.dto";
+import { UpdatePlace } from "./dto/UpdatePlace.dto";
 
 @Controller("/places")
-export class PlaceController{
+export class PlaceController {
 
-    constructor(private placeRepository: PlaceRepository) {}
+    constructor(private placeRepository: PlaceRepository) { }
 
     @Post()
-    async createPlace(@Body() placeData: CreatePlaceDTO){
+    async createPlace(@Body() placeData: CreatePlaceDTO) {
         const exist = await this.placeRepository.haveAddress(placeData.name);
-        if(!exist){
+        if (!exist) {
             const place = Object.assign(new PlaceEntity(), placeData);
             return this.placeRepository.save(place);
         }
@@ -19,7 +20,18 @@ export class PlaceController{
     }
 
     @Get()
-    async listPlaces(){
+    async listPlaces() {
         return this.placeRepository.list();
+    }
+
+    @Put("/:id")
+    async updatePlace(@Param("id") id: number, @Body() newData: UpdatePlace) {
+
+        const updatedPlace = await this.placeRepository.update(id, newData);
+
+        return {
+            place: updatedPlace,
+            message: "Place updated!"
+        }
     }
 }

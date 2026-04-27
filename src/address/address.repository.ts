@@ -4,7 +4,8 @@ import { AddressEntity } from "./address.entity";
 @Injectable()
 export class AddressRepository{
     private addresses: AddressEntity[] = [];
-    constructor(private nextId = 1) {}
+    private nextId = 1;
+    constructor() {}
 
     async save(address: AddressEntity): Promise<AddressEntity>{
         address.id = this.nextId++;
@@ -22,5 +23,26 @@ export class AddressRepository{
         );
 
         return possibleAddress !== undefined;
+    }
+
+    async update(id: number, newData: Partial<AddressEntity>) {
+        const possibleAddress = this.addresses.find(
+            address => address.id === id
+        );
+
+        if (!possibleAddress) {
+            throw new Error("Address do not exist!")
+        }
+
+        Object.entries(newData).forEach(([key, value]) => {
+
+            if (key === "id") {
+                return;
+            }
+
+            possibleAddress[key] = value;
+        });
+
+        return possibleAddress;
     }
 }
