@@ -1,5 +1,6 @@
 import { Body, ConflictException, Controller, Get, Post } from "@nestjs/common";
 import { AddressRepository } from "./address.repository";
+import { AddressEntity } from "./address.entity";
 import { CreateAddressDTO } from "./dto/CreateAddress.dto";
 
 @Controller("/addresses")
@@ -11,8 +12,12 @@ export class AddressController{
     async createAddress(@Body() addressData: CreateAddressDTO){
         const exist = await this.addressRepository.haveAddress(addressData.street, addressData.number);
         if(!exist){
-            this.addressRepository.save(addressData);
-            return addressData;
+            const address = Object.assign(new AddressEntity(), addressData);
+            const saved = await this.addressRepository.save(address);
+            return {
+                Address: saved,
+                message: "Address created!"
+            };
         }
         throw new ConflictException("This address has already been created!")
     }

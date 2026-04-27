@@ -1,19 +1,22 @@
 import { Injectable } from "@nestjs/common";
+import { PlaceEntity } from "./place.entity";
 
 @Injectable()
 export class PlaceRepository{
-    private places: any[] = [];
+    private places: PlaceEntity[] = [];
+    private nextId = 1;
 
-    async save(place){
+    async save(place: PlaceEntity): Promise<PlaceEntity>{
+        place.id = this.nextId++;
         this.places.push(place);
-        console.log(this.places);
+        return place;
     }
 
     async list(){
         return this.places;
     }
 
-    async haveAddress(name){
+    async haveAddress(name: string){
         const possiblePlace = this.places.find(
             place => place.name == name
         );

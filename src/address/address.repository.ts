@@ -1,19 +1,22 @@
 import { Injectable } from "@nestjs/common";
+import { AddressEntity } from "./address.entity";
 
 @Injectable()
 export class AddressRepository{
-    private addresses: any[] = [];
+    private addresses: AddressEntity[] = [];
+    constructor(private nextId = 1) {}
 
-    async save(address){
+    async save(address: AddressEntity): Promise<AddressEntity>{
+        address.id = this.nextId++;
         this.addresses.push(address);
-        console.log(this.addresses);
+        return address;
     }
 
     async list(){
         return this.addresses;
     }
 
-    async haveAddress(street, number){
+    async haveAddress(street: string, number: number){
         const possibleAddress = this.addresses.find(
             address => address.street == street && address.number == number
         );
