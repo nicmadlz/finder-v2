@@ -12,9 +12,9 @@ export class PlaceEntity {
     @Column({ name: "category", length: 70, nullable: false})
     category!: string;
 
-    @Column({ name: "priceRange", length: 15, nullable: false})
+    @Column({ name: "priceRange", nullable: false})
     priceRange!: number;
 
-    @Column({ name: "rating", length: 3, nullable: false})
+    @Column({ name: "rating", nullable: false})
     rating!: number;
 }
