@@ -1,50 +1,43 @@
-import { Body, ConflictException, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
-import { AddressRepository } from "./address.repository";
-import { AddressEntity } from "./address.entity";
-import { CreateAddressDTO } from "./dto/CreateAddress.dto";
-import { UpdateAddress } from "./dto/UpdateAddress.dto";
+import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
+import { AddressService } from "./address.service";
+import { CreateAddressDto } from "./dto/CreateAddress.dto";
+import { UpdateAddressDto } from "./dto/UpdateAddress.dto";
 
 @Controller("/addresses")
 export class AddressController{
 
-    constructor(private addressRepository: AddressRepository) {}
+    constructor(
+        private addressService: AddressService
+    ) { }
 
     @Post()
-    async createAddress(@Body() addressData: CreateAddressDTO){
-        const exist = await this.addressRepository.haveAddress(addressData.street, addressData.number);
-        if(!exist){
-            const address = Object.assign(new AddressEntity(), addressData);
-            const saved = await this.addressRepository.save(address);
-            return {
-                Address: saved,
-                message: "Address created!"
-            };
+    async createAddress(@Body() addressData: CreateAddressDto) {
+        const createdAddress = await this.addressService.createAddress(addressData);
+        return {
+            createdAddress: createdAddress,
+            message: "Address created!"
         }
-        throw new ConflictException("This address has already been created!")
     }
 
     @Get()
-    async listAddresses(){
-        return this.addressRepository.list();
+    async listAddresses() {
+        return await this.addressService.listAddresses();
     }
 
     @Put("/:id")
-    async updateAddress(@Param("id") id: number, @Body() newData: UpdateAddress) {
-
-        const updatedAddress = await this.addressRepository.update(id, newData);
-
+    async updateAddresses(@Param("id") id: number, @Body() newData: UpdateAddressDto) {
+        const updatedAddress = await this.addressService.updateAddress(id, newData);
         return {
             address: updatedAddress,
             message: "Address updated!"
         }
     }
-    
-    @Delete("/:id")
-    async deleteAddress(@Param("id") id: number){
-        const deletedAddress = await this.addressRepository.delete(id);
 
+    @Delete("/:id")
+    async deleteAddress(@Param("id") id: number) {
+        const deletedAddress = await this.addressService.deleteAddress(id);
         return {
-            address: deletedAddress,
+            deletedAddress: deletedAddress,
             message: "Address deleted!"
         }
     }

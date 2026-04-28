@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from "class-validator";
 
-export class UpdatePlace {
+export class UpdatePlaceDto {
 
     @IsNotEmpty({ message: "Name must have content" })
     @IsString()

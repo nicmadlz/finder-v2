@@ -1,34 +1,32 @@
 import { Body, ConflictException, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
-import { PlaceRepository } from "./place.repository";
-import { PlaceEntity } from "./place.entity";
-import { CreatePlaceDTO } from "./dto/CreatePlace.dto";
-import { UpdatePlace } from "./dto/UpdatePlace.dto";
+import { CreatePlaceDto } from "./dto/CreatePlace.dto";
+import { UpdatePlaceDto } from "./dto/UpdatePlace.dto";
+import { PlaceService } from "./place.service";
 
 @Controller("/places")
 export class PlaceController {
 
-    constructor(private placeRepository: PlaceRepository) { }
+    constructor(
+        private placeService: PlaceService
+    ) { }
 
     @Post()
-    async createPlace(@Body() placeData: CreatePlaceDTO) {
-        const exist = await this.placeRepository.haveAddress(placeData.name);
-        if (!exist) {
-            const place = Object.assign(new PlaceEntity(), placeData);
-            return this.placeRepository.save(place);
+    async createPlace(@Body() placeData: CreatePlaceDto) {
+        const createdPlace = await this.placeService.createPlace(placeData);
+        return {
+            createdPlace: createdPlace,
+            message: "Place created!"
         }
-        throw new ConflictException("This place has already been created!")
     }
 
     @Get()
     async listPlaces() {
-        return this.placeRepository.list();
+        return await this.placeService.listPlaces();
     }
 
     @Put("/:id")
-    async updatePlace(@Param("id") id: number, @Body() newData: UpdatePlace) {
-
-        const updatedPlace = await this.placeRepository.update(id, newData);
-
+    async updatePlace(@Param("id") id: number, @Body() newData: UpdatePlaceDto) {
+        const updatedPlace = await this.placeService.updatePlace(id, newData);
         return {
             place: updatedPlace,
             message: "Place updated!"
@@ -36,9 +34,8 @@ export class PlaceController {
     }
 
     @Delete("/:id")
-    async deletePlace(@Param("id") id: number){
-        const deletedPlace = await this.placeRepository.delete(id);
-        
+    async deletePlace(@Param("id") id: number) {
+        const deletedPlace = await this.placeService.deletePlace(id);
         return {
             place: deletedPlace,
             message: "Place deleted!"

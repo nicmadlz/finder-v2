@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber } from "class-validator";
 
-export class CreateAddressDTO{
+export class CreateAddressDto{
 
     @IsNotEmpty({ message: "Street must have content"})
     street!: string;

@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString, MaxLength } from "class-validator";
 
-export class CreatePlaceDTO {
+export class CreatePlaceDto {
 
     @IsNotEmpty({ message: "Name must have content" })
     @IsString()

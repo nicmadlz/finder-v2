@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 
-export class UpdateAddress{
+export class UpdateAddressDto{
 
     @IsNotEmpty({ message: "Street must have content"})
     @IsOptional()
