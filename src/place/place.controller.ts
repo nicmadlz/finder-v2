@@ -24,6 +24,11 @@ export class PlaceController {
         return await this.placeService.listPlaces();
     }
 
+    @Get("/:id")
+    async findPlace(@Param("id") id: number) {
+        return await this.placeService.findPlace(id);
+    }
+
     @Put("/:id")
     async updatePlace(@Param("id") id: number, @Body() newData: UpdatePlaceDto) {
         const updatedPlace = await this.placeService.updatePlace(id, newData);

@@ -1,9 +1,8 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { AddressEntity } from "./address.entity";
 import { Repository } from "typeorm";
 import { UpdateAddressDto } from "src/address/dto/UpdateAddress.dto";
-import { CreateAddressDto } from "src/address/dto/CreateAddress.dto";
 
 @Injectable()
 export class AddressService {
@@ -13,30 +12,20 @@ export class AddressService {
     ) { }
 
     async listAddresses() {
-        const savedAddresses = await this.addressRepository.find();
-
-        return savedAddresses;
+        return await this.addressRepository.find();
     }
 
-    async createAddress(addressData: CreateAddressDto) {
-        const exist = await this.addressRepository.findOne({ where: {
-             street: addressData.street,
-             number: addressData.number}
-            });
-
-        if (exist) {
-            throw new ConflictException("This address has already been created!");
+    async findAddress(id: number) {
+        const address = await this.addressRepository.findOne({ where: { id } });
+        if (!address) {
+            throw new NotFoundException(`Address with id ${id} not found`);
         }
-
-        const address = Object.assign(new AddressEntity(), addressData);
-        return await this.addressRepository.save(address);
+        return address;
     }
 
     async updateAddress(id: number, addressData: UpdateAddressDto) {
-        return await this.addressRepository.update(id, addressData);
-    }
-
-    async deleteAddress(id: number) {
-        return await this.addressRepository.delete(id);
+        const address = await this.findAddress(id);
+        Object.assign(address, addressData);
+        return await this.addressRepository.save(address);
     }
 }

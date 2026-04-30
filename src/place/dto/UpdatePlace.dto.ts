@@ -1,23 +1,30 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from "class-validator";
+import { Type } from "class-transformer";
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, ValidateNested } from "class-validator";
+import { UpdateAddressDto } from "src/address/dto/UpdateAddress.dto";
 
 export class UpdatePlaceDto {
 
     @IsNotEmpty({ message: "Name must have content" })
     @IsString()
     @IsOptional()
-    name!: string;
+    name?: string;
 
     @MaxLength(30, { message: "Category must not have more than 30 characters" })
     @IsNotEmpty({ message: "Category must not be empty" })
     @IsString()
     @IsOptional()
-    category!: string;
+    category?: string;
 
     @IsNumber({}, { message: "Price Range must be a number" })
     @IsOptional()
-    priceRange!: number;
+    priceRange?: number;
 
     @IsNumber({}, { message: "Rating must be a number" })
     @IsOptional()
-    rating!: number;
+    rating?: number;
+
+    @ValidateNested()
+    @Type(() => UpdateAddressDto)
+    @IsOptional()
+    address?: UpdateAddressDto;
 }

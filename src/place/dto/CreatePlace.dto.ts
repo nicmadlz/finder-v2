@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsNumber, IsString, MaxLength } from "class-validator";
+import { Type } from "class-transformer";
+import { IsDefined, IsNotEmpty, IsNumber, IsString, MaxLength, ValidateNested } from "class-validator";
+import { CreateAddressDto } from "src/address/dto/CreateAddress.dto";
 
 export class CreatePlaceDto {
 
@@ -16,4 +18,9 @@ export class CreatePlaceDto {
 
     @IsNumber({}, { message: "Rating must be a number" })
     rating!: number;
+
+    @IsDefined({ message: "Address must be provided" })
+    @ValidateNested()
+    @Type(() => CreateAddressDto)
+    address!: CreateAddressDto;
 }

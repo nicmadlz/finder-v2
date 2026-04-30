@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { AddressEntity } from "../address/address.entity";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({ name: "places"})
 export class PlaceEntity {
@@ -17,4 +18,8 @@ export class PlaceEntity {
 
     @Column({ name: "rating", nullable: false})
     rating!: number;
+
+    @OneToOne(() => AddressEntity, { cascade: true, eager: true, orphanedRowAction: 'delete' })
+    @JoinColumn()
+    address!: AddressEntity;
 }
