@@ -145,6 +145,8 @@ Get the token by calling `POST /auth/login`.
 src/
 ├── address/
 │   ├── dto/
+│       ├── CreateAddress.dto.ts
+│       ├── UpdateAddress.dto.ts
 │   ├── address.controller.ts
 │   ├── address.entity.ts
 │   ├── address.module.ts
@@ -152,7 +154,9 @@ src/
 │   └── address.service.ts
 ├── auth/
 │   ├── dto/
-│   ├── guards/
+│       ├── CreateUser.dto.ts
+│       ├── LoginUser.dto.ts
+│   ├── guards/jwt-auth.guard.ts
 │   ├── auth.controller.ts
 │   ├── auth.module.ts
 │   ├── auth.service.ts
@@ -165,6 +169,8 @@ src/
 │   └── global-exception.filter.ts
 ├── place/
 │   ├── dto/
+│       ├── CreatePlace.dto.ts
+│       ├── UpdatePlace.dto.ts
 │   ├── place.controller.ts
 │   ├── place.entity.ts
 │   ├── place.module.ts
