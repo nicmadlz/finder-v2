@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresConfigService } from './config/postgres.config.service';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -17,7 +19,19 @@ import { AuthModule } from './auth/auth.module';
     TypeOrmModule.forRootAsync({
       useClass: PostgresConfigService,
       inject: [PostgresConfigService]
-    })
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => ({
+        store: await redisStore({
+          socket: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: 6379,
+          },
+          ttl: 60,
+        }),
+      }),
+    }),
   ],
   controllers: [],
   providers: [],
