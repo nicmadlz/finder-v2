@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Put } from "@nestjs/common";
+import { Body, Controller, Get, Param, Put, UseGuards } from "@nestjs/common";
 import { AddressService } from "./address.service";
 import { UpdateAddressDto } from "./dto/UpdateAddress.dto";
+import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 
 @Controller("/addresses")
 export class AddressController{
@@ -19,6 +20,7 @@ export class AddressController{
         return await this.addressService.findAddress(id);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Put("/:id")
     async updateAddress(@Param("id") id: number, @Body() newData: UpdateAddressDto) {
         const updatedAddress = await this.addressService.updateAddress(id, newData);

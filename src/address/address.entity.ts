@@ -17,7 +17,7 @@ export class AddressEntity{
     neighborhood!: string;
 
     @Column({ name: "Cep", nullable: false})
-    Cep!: number;
+    cep!: number;
     
     @OneToOne(() => PlaceEntity, (place) => place.address)
     place!: PlaceEntity
