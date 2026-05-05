@@ -3,6 +3,7 @@ import { PlaceService } from "./place.service";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { PlaceEntity } from "./place.entity";
 import { AddressEntity } from "src/address/address.entity";
+import { ConflictException, NotFoundException } from "@nestjs/common";
 
 describe("PlaceService", () => {
     let placeService: PlaceService;
@@ -51,16 +52,65 @@ describe("PlaceService", () => {
         })
     });
 
-it("must return all places", async () => {
-    jest.spyOn(placeService["placeRepository"], "find")
-        .mockResolvedValue([{
-            id: 1, name: "test", category: "test", priceRange: 12, rating: 5, address: {
-                id: 1, street: "Test", number: 111, neighborhood: "Centro", cep: 90440170
-            } as AddressEntity
-        } as PlaceEntity]);
+    it("must return all places", async () => {
+        jest.spyOn(placeService["placeRepository"], "find")
+            .mockResolvedValue([{
+                id: 1, name: "test", category: "test", priceRange: 12, rating: 5, address: {
+                    id: 1, street: "Test", number: 111, neighborhood: "Centro", cep: 90440170
+                } as AddressEntity
+            } as PlaceEntity]);
 
-    await expect(placeService.listPlaces()).resolves.toMatchObject([{
-        id: 1, name: "test", category: "test", priceRange: 12, rating: 5
-    }])
-});
+        await expect(placeService.listPlaces()).resolves.toMatchObject([{
+            id: 1, name: "test", category: "test", priceRange: 12, rating: 5
+        }])
+    });
+
+    it("must find a place by id", async () => {
+        jest.spyOn(placeService["placeRepository"], "findOne")
+            .mockResolvedValue({ id: 1, name: "test", category: "test", priceRange: 12, rating: 5 } as PlaceEntity)
+
+        await expect(placeService.findPlace(1)).resolves.toMatchObject({
+            id: 1, name: "test", category: "test", priceRange: 12, rating: 5
+        })
+    })
+
+    it("must update a place", async () => {
+        jest.spyOn(placeService["placeRepository"], "findOne")
+            .mockResolvedValue({ id: 1, name: "test", category: "test", priceRange: 12, rating: 5 } as PlaceEntity);
+
+        jest.spyOn(placeService["placeRepository"], "save")
+            .mockResolvedValue({ id: 1, name: "test2", category: "test", priceRange: 12, rating: 5 } as PlaceEntity)
+
+        await expect(placeService.updatePlace(1, { name: "test2" })).resolves.toMatchObject({ id: 1, name: "test2", category: "test", priceRange: 12, rating: 5 })
+    })
+
+    it("must delete a place", async () => {
+        jest.spyOn(placeService["placeRepository"], "findOne")
+            .mockResolvedValue({ id: 1, name: "test", category: "test", priceRange: 12, rating: 5 } as PlaceEntity)
+
+        jest.spyOn(placeService["placeRepository"], "remove")
+            .mockResolvedValue({ id: 1, name: "test", category: "test", priceRange: 12, rating: 5 } as PlaceEntity);
+
+        await expect(placeService.deletePlace(1)).resolves.toMatchObject({ id: 1, name: "test", category: "test", priceRange: 12, rating: 5 });
+    })
+
+    it("must return NotFoundException", async () => {
+        jest.spyOn(placeService["placeRepository"], "findOne")
+            .mockResolvedValue(null)
+
+        await expect(placeService.findPlace(1)).rejects.toThrow(NotFoundException)
+    })
+
+    it("must return ConflictException", async () => {
+
+        jest.spyOn(placeService["placeRepository"], "findOne")
+            .mockResolvedValue({ id: 1, name: "test", category: "test", priceRange: 12, rating: 5 } as PlaceEntity)
+
+        jest.spyOn(placeService["placeRepository"], "save")
+            .mockResolvedValue({ id: 1, name: "test", category: "test", priceRange: 12, rating: 5 } as PlaceEntity)
+        
+        await expect(placeService.createPlace({ name: "test", category: "test", priceRange: 12, rating: 5, address: {
+            street: "teste", number: 11, neighborhood: "teste", cep: 123456789
+        }})).rejects.toThrow(ConflictException)
+    })
 });
