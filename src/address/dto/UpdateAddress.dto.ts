@@ -4,17 +4,17 @@ export class UpdateAddressDto{
 
     @IsNotEmpty({ message: "Street must have content"})
     @IsOptional()
-    street!: string;
+    street?: string;
 
     @IsNumber(undefined, { message: "Number must be a number"})
     @IsOptional()
-    number!: number;
+    number?: number;
 
     @IsNotEmpty({message: "Neighborhood must have content"})
     @IsOptional()
-    neighborhood!: string;
+    neighborhood?: string;
 
     @IsNumber(undefined, {message: "Cep must be a number"})
     @IsOptional()
-    cep!: number;
+    cep?: number;
 }
