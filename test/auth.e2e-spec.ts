@@ -52,10 +52,35 @@ describe('Auth (e2e)', () => {
   it("POST /auth/login", async () => {
     const response = await request(app.getHttpServer())
       .post("/auth/login")
-      .send({ email: "nicolas@test.com", password: "123456"})
-    
+      .send({ email: "nicolas@test.com", password: "123456" })
+
     expect(response.status).toBe(201);
     expect(response.body.token.accessToken).toBeDefined();
     expect(typeof response.body.token.accessToken).toBe("string");
   })
+
+  it("Same Email - POST /auth/register", async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({ name: 'Nicolas', email: 'nicolas@test.com', password: '123456' });
+    
+    expect(response.status).toBe(409)
+  })
+
+  it("Wrong Email - POST /auth/login", async () => {
+    const response = await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: "wrongEmail@test.com", password: "123456" })
+
+    expect(response.status).toBe(404);
+  })
+
+    it("Wrong Password - POST /auth/login", async () => {
+    const response = await request(app.getHttpServer())
+      .post("/auth/login")
+      .send({ email: "nicolas@test.com", password: "wrongPassword" })
+
+    expect(response.status).toBe(401);
+  })
+
 });
