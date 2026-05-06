@@ -71,9 +71,9 @@ describe('Address (e2e)', () => {
             .put(`/addresses/${addressId}`)
             .set('Authorization', `Bearer ${token}`)
             .send({ street: 'test street' });
-        
+
         id = placeResponse.body.createdPlace.address.id;
-        
+
         expect(response.status).toBe(200);
         expect(response.body.address.street).toBe('test street');
     });
@@ -95,8 +95,6 @@ describe('Address (e2e)', () => {
         const response = await request(app.getHttpServer())
             .get(`/addresses/${id}`)
 
-        console.log(response)
-
         expect(response.status).toBe(200);
         expect(response.body).toMatchObject({
             id: id,
@@ -105,6 +103,38 @@ describe('Address (e2e)', () => {
             neighborhood: 'test',
             cep: 90440170
         })
-
     })
-});
+
+    it("Wrong Id - GET /addresses/:id", async () => {
+        const response = await request(app.getHttpServer())
+            .get(`/addresses/-1`)
+
+        expect(response.status).toBe(404);
+    })
+
+    it("Without token - PUT /addresses/:id", async () => {
+        const placeResponse = await request(app.getHttpServer())
+            .post('/places')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                name: 'TestForPutERROR',
+                category: 'test',
+                priceRange: 2,
+                rating: 4,
+                address: {
+                    street: 'test',
+                    number: 123,
+                    neighborhood: 'test',
+                    cep: 90440170
+                }
+            });
+
+        const addressId = placeResponse.body.createdPlace.address.id;
+
+        const response = await request(app.getHttpServer())
+            .put(`/addresses/${addressId}`)
+            .send({ street: 'test street' });
+
+        expect(response.status).toBe(401);
+    });
+})

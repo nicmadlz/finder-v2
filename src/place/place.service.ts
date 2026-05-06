@@ -46,6 +46,13 @@ export class PlaceService {
     async updatePlace(id: number, placeData: UpdatePlaceDto) {
         const place = await this.findPlace(id);
 
+        if (placeData.name) {
+            const exist = await this.placeRepository.findOne({ where: { name: placeData.name } });
+            if (exist && exist.id !== id) {
+                throw new ConflictException("This place name is already in use!");
+            }
+        }
+
         const { address: addressData, ...placeFields } = placeData;
         Object.assign(place, placeFields);
 
