@@ -13,8 +13,19 @@ export class PlaceService {
         private readonly placeRepository: Repository<PlaceEntity>
     ) { }
 
-    async listPlaces() {
-        return await this.placeRepository.find();
+    async listPlaces(page: number, pageSize: number) {
+        const [data, total] = await this.placeRepository.findAndCount({
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+        })
+
+        return {
+            data: data,
+            total: total,
+            hasNext: page * pageSize < total,
+            page: page,
+            pageSize: pageSize
+        };
     }
 
     async findPlace(id: number) {

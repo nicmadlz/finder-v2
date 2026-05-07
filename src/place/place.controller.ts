@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post, Put, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query, UseGuards, UseInterceptors } from "@nestjs/common";
 import { CreatePlaceDto } from "./dto/CreatePlace.dto";
 import { UpdatePlaceDto } from "./dto/UpdatePlace.dto";
 import { PlaceService } from "./place.service";
@@ -28,8 +28,8 @@ export class PlaceController {
     @CacheKey("places")
     @CacheTTL(60)
     @Get()
-    async listPlaces() {
-        return await this.placeService.listPlaces();
+    async listPlaces(@Query("page") page: number, @Query("pageSize") pageSize: number) {
+        return await this.placeService.listPlaces(+page, +pageSize);
     }
 
     @UseInterceptors(CacheInterceptor)
