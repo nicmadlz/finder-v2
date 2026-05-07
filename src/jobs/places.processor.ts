@@ -21,12 +21,13 @@ export class PlacesProcessor extends WorkerHost implements OnModuleInit {
     }
 
     async onModuleInit() {
+        await this.placesQueue.obliterate({ force: true });
         await this.placesQueue.add(
             'sync-places',
             {},
             {
                 repeat: {
-                    every: 10000,
+                    every: 3600000,
                 },
             }
         )

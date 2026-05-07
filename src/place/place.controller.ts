@@ -4,7 +4,9 @@ import { UpdatePlaceDto } from "./dto/UpdatePlace.dto";
 import { PlaceService } from "./place.service";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { CACHE_MANAGER, CacheInterceptor, CacheKey, CacheTTL, Cache } from "@nestjs/cache-manager";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 
+@ApiTags("Places")
 @Controller("/places")
 export class PlaceController {
 
@@ -13,17 +15,20 @@ export class PlaceController {
         @Inject(CACHE_MANAGER) private cacheManager: Cache
     ) { }
 
+    @ApiBearerAuth()
+    @ApiOperation({ summary: "Create a place" })
+    @ApiResponse({ status: 201, description: "Returns the created place and a success message" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
     @UseGuards(JwtAuthGuard)
     @Post()
     async createPlace(@Body() placeData: CreatePlaceDto) {
         const createdPlace = await this.placeService.createPlace(placeData);
-        await this.cacheManager.del("places")
-        return {
-            createdPlace: createdPlace,
-            message: "Place created!"
-        }
+        await this.cacheManager.del("places");
+        return { createdPlace, message: "Place created!" };
     }
 
+    @ApiOperation({ summary: "List all places with pagination" })
+    @ApiResponse({ status: 200, description: "Returns paginated list of places" })
     @UseInterceptors(CacheInterceptor)
     @CacheKey("places")
     @CacheTTL(60)
@@ -32,6 +37,9 @@ export class PlaceController {
         return await this.placeService.listPlaces(+page, +pageSize);
     }
 
+    @ApiOperation({ summary: "Get a place by ID" })
+    @ApiResponse({ status: 200, description: "Returns the place" })
+    @ApiResponse({ status: 404, description: "Place not found" })
     @UseInterceptors(CacheInterceptor)
     @CacheKey("places")
     @CacheTTL(60)
@@ -40,26 +48,29 @@ export class PlaceController {
         return await this.placeService.findPlace(id);
     }
 
-    
+    @ApiBearerAuth()
+    @ApiOperation({ summary: "Update a place by ID" })
+    @ApiResponse({ status: 200, description: "Returns the updated place and a success message" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
+    @ApiResponse({ status: 404, description: "Place not found" })
     @UseGuards(JwtAuthGuard)
     @Put("/:id")
     async updatePlace(@Param("id") id: number, @Body() newData: UpdatePlaceDto) {
         const updatedPlace = await this.placeService.updatePlace(id, newData);
-        await this.cacheManager.del("places")
-        return {
-            place: updatedPlace,
-            message: "Place updated!"
-        }
+        await this.cacheManager.del("places");
+        return { place: updatedPlace, message: "Place updated!" };
     }
 
+    @ApiBearerAuth()
+    @ApiOperation({ summary: "Delete a place by ID" })
+    @ApiResponse({ status: 200, description: "Returns the deleted place and a success message" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
+    @ApiResponse({ status: 404, description: "Place not found" })
     @UseGuards(JwtAuthGuard)
     @Delete("/:id")
     async deletePlace(@Param("id") id: number) {
         const deletedPlace = await this.placeService.deletePlace(id);
-        await this.cacheManager.del("places")
-        return {
-            place: deletedPlace,
-            message: "Place deleted!"
-        }
+        await this.cacheManager.del("places");
+        return { place: deletedPlace, message: "Place deleted!" };
     }
 }

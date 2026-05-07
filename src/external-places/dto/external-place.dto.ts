@@ -1,10 +1,21 @@
+import { ApiProperty } from "@nestjs/swagger";
+
 export class ExternalPlaceDto{
 
+    @ApiProperty({ description: "Place name", example: "Café do Mercado" })
     name!: string;
+
+    @ApiProperty({ description: "Latitude coordinate", example: "-30.0277" })
     latitude!: string;
+
+    @ApiProperty({ description: "Longitude coordinate", example: "-51.2287" })
     longitude!: string;
+
+    @ApiProperty({ description: "City name", example: "Porto Alegre" })
     city!: string;
-    country!: string; 
+
+    @ApiProperty({ description: "Country name", example: "Brazil" })
+    country!: string;
 
     static fromNominatim(raw: any): ExternalPlaceDto{
         const dto = new ExternalPlaceDto();
