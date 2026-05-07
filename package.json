@@ -22,7 +22,8 @@
     "migration:generate": "npm run typeorm -- migration:generate",
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
-    "migration:run:test": "cross-env DB_HOST=127.0.0.1 DB_PORT=5433 DB_NAME=finder_test npm run migration:run"
+    "migration:run:test": "cross-env DB_HOST=127.0.0.1 DB_PORT=5433 DB_NAME=finder_test npm run migration:run",
+    "seed": "ts-node -r tsconfig-paths/register src/config/seeds/admin.seed.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
