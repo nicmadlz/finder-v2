@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { ExternalPlacesModule } from './external-places/external-places.module';
+import { BullModule } from "@nestjs/bullmq"
+import { JobsModule } from './jobs/jobs.module';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { ExternalPlacesModule } from './external-places/external-places.module';
     PlaceModule,
     AuthModule,
     ExternalPlacesModule,
+    JobsModule,
     ConfigModule.forRoot({
       isGlobal: true
     }),
@@ -34,6 +37,12 @@ import { ExternalPlacesModule } from './external-places/external-places.module';
         }),
       }),
     }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST ?? "localhost",
+        port: 6379,
+      }
+    })
   ],
   controllers: [],
   providers: [],

@@ -7,5 +7,6 @@ import { HttpModule } from "@nestjs/axios"
   imports: [HttpModule],
   controllers: [ExternalPlacesController],
   providers: [ExternalPlacesService],
+  exports: [ExternalPlacesService]
 })
 export class ExternalPlacesModule {}
