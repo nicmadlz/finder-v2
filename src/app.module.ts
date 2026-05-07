@@ -7,12 +7,14 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
+import { ExternalPlacesModule } from './external-places/external-places.module';
 
 @Module({
   imports: [
     AddressModule,
     PlaceModule,
     AuthModule,
+    ExternalPlacesModule,
     ConfigModule.forRoot({
       isGlobal: true
     }),
