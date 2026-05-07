@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
-import { firstValueFrom } from "rxjs";
+import { catchError, firstValueFrom, of, retry, timeout } from "rxjs";
 import { ExternalPlaceDto } from "./dto/external-place.dto";
 
 @Injectable()
@@ -22,7 +22,14 @@ export class ExternalPlacesService {
                 headers: {
                     "User-Agent": "finder-v2/1.0"
                 }
-            }))
+            }).pipe(
+                timeout(3000),
+                retry(2),
+                catchError(err => {
+                    console.log("Nominatim failed: ", err.message)
+                    return of({ data: [] });
+                })
+            ))
 
             const result = data.map(item => ExternalPlaceDto.fromNominatim(item));
             return result;
