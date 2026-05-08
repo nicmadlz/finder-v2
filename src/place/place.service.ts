@@ -37,7 +37,7 @@ export class PlaceService {
     }
 
     async createPlace(placeData: CreatePlaceDto) {
-        try{const exist = await this.placeRepository.findOne({ where: { name: placeData.name } });
+        const exist = await this.placeRepository.findOne({ where: { name: placeData.name } });
         if (exist) {
             throw new ConflictException("This place has already been created!");
         }
@@ -51,9 +51,7 @@ export class PlaceService {
             address,
         });
 
-        return await this.placeRepository.save(place);} catch(error){
-            console.log(error)
-        }
+        return await this.placeRepository.save(place);
     }
 
     async updatePlace(id: number, placeData: UpdatePlaceDto) {

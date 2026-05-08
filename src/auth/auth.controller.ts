@@ -2,11 +2,12 @@ import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/co
 import { CreateUserDto } from "./dto/CreateUser.dto";
 import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/LoginUser.dto";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Role } from "./enums/role.enum";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { RolesGuard } from "./guards/roles.guard";
 import { Roles } from "./decorators/roles.decorator";
+import { UpdateRoleDto } from "./dto/UpdateRole.dto";
 
 @ApiTags("Auth")
 @Controller("/auth")
@@ -44,13 +45,24 @@ export class AuthController {
         }
     }
 
+    @ApiBearerAuth()
+    @ApiOperation({ summary: "Update a user's role (admin only)" })
+    @ApiResponse({ status: 200, description: "Role updated" })
+    @ApiResponse({ status: 400, description: "Invalid role" })
+    @ApiResponse({ status: 401, description: "Unauthorized" })
+    @ApiResponse({ status: 403, description: "Forbidden — admin role required" })
+    @ApiResponse({ status: 404, description: "User not found" })
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.ADMIN)
     @Patch("/:id/role")
-    async addAdmin(@Param("id") id: string, @Body("role") role: Role) {
-        return await this.authService.updateRole(id, role);
+    async addAdmin(@Param("id") id: string, @Body() body: UpdateRoleDto) {
+        return await this.authService.updateRole(id, body);
     }
 
+    @ApiOperation({ summary: "List all users" })
+    @ApiResponse({ status: 200, description: "Returns the list of users (id, name, email, role)" })
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ADMIN)
     @Get()
     async listUsers() {
         return await this.authService.listUsers();

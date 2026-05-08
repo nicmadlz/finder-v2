@@ -7,6 +7,7 @@ import { CreateUserDto } from "./dto/CreateUser.dto";
 import { JwtService } from "@nestjs/jwt";
 import { LoginUserDto } from "./dto/LoginUser.dto";
 import { Role } from "./enums/role.enum";
+import { UpdateRoleDto } from "./dto/UpdateRole.dto";
 
 @Injectable()
 export class AuthService {
@@ -58,7 +59,7 @@ export class AuthService {
         return { accessToken: token };
     }
 
-    async updateRole(id: string, role: Role) {
+    async updateRole(id: string, updatedRole: UpdateRoleDto) {
         const userExist = await this.userRepository.findOne({
             where: {
                 id: id
@@ -69,7 +70,7 @@ export class AuthService {
             throw new NotFoundException("User not found");
         }
 
-        return this.userRepository.update(id, { role: role });
+        return this.userRepository.update(id, updatedRole );
     }
 
     async listUsers() {
