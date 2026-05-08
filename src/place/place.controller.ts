@@ -27,14 +27,14 @@ export class PlaceController {
     @Post()
     async createPlace(@Body() placeData: CreatePlaceDto) {
         const createdPlace = await this.placeService.createPlace(placeData);
-        await this.cacheManager.del("places");
+        await this.cacheManager.del("places:list");
         return { createdPlace, message: "Place created!" };
     }
 
     @ApiOperation({ summary: "List all places with pagination" })
     @ApiResponse({ status: 200, description: "Returns paginated list of places" })
     @UseInterceptors(CacheInterceptor)
-    @CacheKey("places")
+    @CacheKey("places:list")
     @CacheTTL(60)
     @Get()
     async listPlaces(@Query("page") page: number, @Query("pageSize") pageSize: number) {
@@ -45,7 +45,6 @@ export class PlaceController {
     @ApiResponse({ status: 200, description: "Returns the place" })
     @ApiResponse({ status: 404, description: "Place not found" })
     @UseInterceptors(CacheInterceptor)
-    @CacheKey("places")
     @CacheTTL(60)
     @Get("/:id")
     async findPlace(@Param("id") id: number) {
@@ -62,7 +61,7 @@ export class PlaceController {
     @Put("/:id")
     async updatePlace(@Param("id") id: number, @Body() newData: UpdatePlaceDto) {
         const updatedPlace = await this.placeService.updatePlace(id, newData);
-        await this.cacheManager.del("places");
+        await this.cacheManager.del("places:list");
         return { place: updatedPlace, message: "Place updated!" };
     }
 
@@ -76,7 +75,7 @@ export class PlaceController {
     @Delete("/:id")
     async deletePlace(@Param("id") id: number) {
         const deletedPlace = await this.placeService.deletePlace(id);
-        await this.cacheManager.del("places");
+        await this.cacheManager.del("places:list");
         return { place: deletedPlace, message: "Place deleted!" };
     }
 }
