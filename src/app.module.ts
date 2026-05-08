@@ -10,6 +10,7 @@ import { redisStore } from 'cache-manager-redis-store';
 import { ExternalPlacesModule } from './external-places/external-places.module';
 import { BullModule } from "@nestjs/bullmq"
 import { JobsModule } from './jobs/jobs.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { JobsModule } from './jobs/jobs.module';
     AuthModule,
     ExternalPlacesModule,
     JobsModule,
+    GatewayModule,
     ConfigModule.forRoot({
       isGlobal: true
     }),

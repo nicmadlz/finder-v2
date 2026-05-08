@@ -5,12 +5,13 @@ import { Repository } from "typeorm";
 import { UpdatePlaceDto } from "src/place/dto/UpdatePlace.dto";
 import { CreatePlaceDto } from "src/place/dto/CreatePlace.dto";
 import { AddressEntity } from "src/address/address.entity";
+import { AppGateway } from "src/gateway/app.gateway";
 
 @Injectable()
 export class PlaceService {
     constructor(
-        @InjectRepository(PlaceEntity)
-        private readonly placeRepository: Repository<PlaceEntity>
+        @InjectRepository(PlaceEntity) private readonly placeRepository: Repository<PlaceEntity>,
+        private appGateway: AppGateway
     ) { }
 
     async listPlaces(page: number, pageSize: number) {
@@ -51,7 +52,9 @@ export class PlaceService {
             address,
         });
 
-        return await this.placeRepository.save(place);
+        const result = await this.placeRepository.save(place);
+        this.appGateway.sendPlaceUpdate(result)
+        return result;
     }
 
     async updatePlace(id: number, placeData: UpdatePlaceDto) {
