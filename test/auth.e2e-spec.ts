@@ -42,8 +42,7 @@ describe('Auth (e2e)', () => {
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
       user: {
-        name: 'Nicolas',
-        email: 'nicolas@test.com'
+        name: 'Nicolas'
       },
       message: 'User created!'
     });
@@ -72,7 +71,7 @@ describe('Auth (e2e)', () => {
       .post("/auth/login")
       .send({ email: "wrongEmail@test.com", password: "123456" })
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(401);
   })
 
     it("Wrong Password - POST /auth/login", async () => {

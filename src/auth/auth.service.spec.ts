@@ -3,7 +3,7 @@ import { AuthService } from "./auth.service";
 import { UserEntity } from "./user.entity";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { JwtService } from "@nestjs/jwt";
-import { ConflictException, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, UnauthorizedException } from "@nestjs/common";
 
 describe("AuthService", () => {
     let authService: AuthService;
@@ -46,7 +46,7 @@ describe("AuthService", () => {
 
         await expect(
             authService.loginUser({ email: "wrongEmail@test.com", password: "123456" })
-        ).rejects.toThrow(NotFoundException);
+        ).rejects.toThrow(UnauthorizedException);
     });
 
     it("must throw UnauthorizedException if password is wrong", async () => {

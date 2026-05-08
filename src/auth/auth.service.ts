@@ -46,12 +46,12 @@ export class AuthService {
     async loginUser(userData: LoginUserDto) {
         const exist = await this.findUserByEmail(userData.email);
         if (!exist) {
-            throw new NotFoundException("User not found");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         const passwordCompare = await bcrypt.compare(userData.password, exist.password)
         if (!passwordCompare) {
-            throw new UnauthorizedException("Invalid password");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         const payload = { sub: exist.id, email: exist.email, role: exist.role };
@@ -61,21 +61,20 @@ export class AuthService {
 
     async updateRole(id: string, updatedRole: UpdateRoleDto) {
         const userExist = await this.userRepository.findOne({
-            where: {
-                id: id
-            }
+            where: { id }
         });
 
         if (!userExist) {
             throw new NotFoundException("User not found");
         }
 
-        return this.userRepository.update(id, updatedRole );
+        userExist.role = updatedRole.role;
+        return this.userRepository.save(userExist);
     }
 
     async listUsers() {
         return this.userRepository.find({
-            select: ['id', 'name', 'email', 'role']
+            select: ['id', 'name', 'role']
         });
     }
 }

@@ -24,8 +24,7 @@ export class AuthController {
 
         return {
             user: {
-                name: createdUser.name,
-                email: createdUser.email
+                name: createdUser.name
             },
             message: "User created!"
         }
