@@ -11,6 +11,8 @@ import { ExternalPlacesModule } from './external-places/external-places.module';
 import { BullModule } from "@nestjs/bullmq"
 import { JobsModule } from './jobs/jobs.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler"
+import { APP_GUARD } from "@nestjs/core"
 
 @Module({
   imports: [
@@ -23,6 +25,10 @@ import { GatewayModule } from './gateway/gateway.module';
     ConfigModule.forRoot({
       isGlobal: true
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 10,
+    }]),
     TypeOrmModule.forRootAsync({
       useClass: PostgresConfigService,
       inject: [PostgresConfigService]
@@ -47,6 +53,11 @@ import { GatewayModule } from './gateway/gateway.module';
     })
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    }
+  ],
 })
-export class AppModule {}
+export class AppModule { }
