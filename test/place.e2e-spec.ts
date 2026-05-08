@@ -31,12 +31,16 @@ describe('Place (e2e)', () => {
         await dataSource.query('DELETE FROM "places"');
         await dataSource.query('DELETE FROM "users"');
         await dataSource.query('DELETE FROM "address"');
-
-
+        
+        
         await request(app.getHttpServer())
-            .post('/auth/register')
-            .send({ name: 'Nicolas', email: 'nicolas@test.com', password: '123456' });
-
+        .post('/auth/register')
+        .send({ name: 'Nicolas', email: 'nicolas@test.com', password: '123456' });
+        
+        await dataSource.query(
+            `UPDATE "users" SET "role" = 'admin' WHERE "email" = 'nicolas@test.com'`
+        );
+        
         const loginResponse = await request(app.getHttpServer())
             .post('/auth/login')
             .send({ email: 'nicolas@test.com', password: '123456' });
@@ -73,10 +77,10 @@ describe('Place (e2e)', () => {
 
     it("GET - /places", async () => {
         const response = await request(app.getHttpServer())
-            .get("/places")
+            .get("/places?page=1&pageSize=10")
 
         expect(response.status).toBe(200);
-        expect(response.body).toBeInstanceOf(Array)
+        expect(response.body.data).toBeInstanceOf(Array)
     })
 
     it("GET - /places:id", async () => {

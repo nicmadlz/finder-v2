@@ -37,6 +37,10 @@ describe('Address (e2e)', () => {
             .post('/auth/register')
             .send({ name: 'Nicolas', email: 'nicolas@test.com', password: '123456' });
 
+        await dataSource.query(
+            `UPDATE "users" SET "role" = 'admin' WHERE "email" = 'nicolas@test.com'`
+        );
+
         const loginResponse = await request(app.getHttpServer())
             .post('/auth/login')
             .send({ email: 'nicolas@test.com', password: '123456' });

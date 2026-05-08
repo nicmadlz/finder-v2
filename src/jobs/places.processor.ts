@@ -21,6 +21,7 @@ export class PlacesProcessor extends WorkerHost implements OnModuleInit {
     }
 
     async onModuleInit() {
+        await this.placesQueue.pause();
         await this.placesQueue.obliterate({ force: true });
         await this.placesQueue.add(
             'sync-places',
