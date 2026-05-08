@@ -1,14 +1,17 @@
+import { Logger } from "@nestjs/common"
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets"
 import { Server } from "socket.io"
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
+    private readonly logger = new Logger(AppGateway.name);
+
     handleConnection(client: any) {
-        console.log("Hello")
+        this.logger.log(`Client connected: ${client.id}`);
     }
 
-    handleDisconnect(client: any){
-        console.log("World")
+    handleDisconnect(client: any) {
+        this.logger.log(`Client disconnected: ${client.id}`);
     }
 
     @WebSocketServer()
