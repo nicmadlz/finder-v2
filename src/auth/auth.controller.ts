@@ -59,7 +59,7 @@ export class AuthController {
     }
 
     @ApiOperation({ summary: "List all users" })
-    @ApiResponse({ status: 200, description: "Returns the list of users (id, name, email, role)" })
+    @ApiResponse({ status: 200, description: "Returns the list of users (id, name, role)" })
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.ADMIN)
     @Get()

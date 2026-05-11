@@ -55,8 +55,7 @@ export class AuthService {
         }
 
         const payload = { sub: exist.id, email: exist.email, role: exist.role };
-        const token = this.jwtService.sign(payload);
-        return { accessToken: token };
+        return this.jwtService.sign(payload);
     }
 
     async updateRole(id: string, updatedRole: UpdateRoleDto) {

@@ -28,6 +28,7 @@ export class PlaceController {
     async createPlace(@Body() placeData: CreatePlaceDto) {
         const createdPlace = await this.placeService.createPlace(placeData);
         await this.cacheManager.del("places:list");
+        await this.cacheManager.del("address:list");
         return { createdPlace, message: "Place created!" };
     }
 
@@ -62,6 +63,9 @@ export class PlaceController {
     async updatePlace(@Param("id") id: number, @Body() newData: UpdatePlaceDto) {
         const updatedPlace = await this.placeService.updatePlace(id, newData);
         await this.cacheManager.del("places:list");
+        await this.cacheManager.del("address:list");
+        await this.cacheManager.del(`/places/${id}`);
+        await this.cacheManager.del(`/addresses/${updatedPlace.address.id}`);
         return { place: updatedPlace, message: "Place updated!" };
     }
 
@@ -76,6 +80,11 @@ export class PlaceController {
     async deletePlace(@Param("id") id: number) {
         const deletedPlace = await this.placeService.deletePlace(id);
         await this.cacheManager.del("places:list");
+        await this.cacheManager.del("address:list");
+        await this.cacheManager.del(`/places/${id}`);
+        if (deletedPlace.address?.id) {
+            await this.cacheManager.del(`/addresses/${deletedPlace.address.id}`);
+        }
         return { place: deletedPlace, message: "Place deleted!" };
     }
 }

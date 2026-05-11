@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, ValidateNested } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from "class-validator";
 import { UpdateAddressDto } from "src/address/dto/UpdateAddress.dto";
 
 export class UpdatePlaceDto {
@@ -20,11 +20,15 @@ export class UpdatePlaceDto {
 
     @ApiProperty({ description: "Price range from 1 (cheap) to 5 (expensive)", example: 3, required: false })
     @IsNumber({}, { message: "Price Range must be a number" })
+    @Min(1, { message: "Price Range must be at least 1" })
+    @Max(5, { message: "Price Range must be at most 5" })
     @IsOptional()
     priceRange?: number;
 
     @ApiProperty({ description: "Average rating from 0 to 5", example: 4.5, required: false })
     @IsNumber({}, { message: "Rating must be a number" })
+    @Min(0, { message: "Rating must be at least 0" })
+    @Max(5, { message: "Rating must be at most 5" })
     @IsOptional()
     rating?: number;
 

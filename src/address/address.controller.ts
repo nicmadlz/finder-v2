@@ -4,6 +4,9 @@ import { UpdateAddressDto } from "./dto/UpdateAddress.dto";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { CacheInterceptor, CacheKey, CacheTTL, Cache, CACHE_MANAGER } from "@nestjs/cache-manager";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { RolesGuard } from "src/auth/guards/roles.guard";
+import { Roles } from "src/auth/decorators/roles.decorator";
+import { Role } from "src/auth/enums/role.enum";
 
 @ApiTags("Addresses")
 @Controller("/addresses")
@@ -17,7 +20,7 @@ export class AddressController{
     @ApiOperation({ summary: "List all addresses" })
     @ApiResponse({ status: 200, description: "Returns the list of addresses" })
     @UseInterceptors(CacheInterceptor)
-    @CacheKey("address")
+    @CacheKey("address:list")
     @CacheTTL(60)
     @Get()
     async listAddresses() {
@@ -26,7 +29,9 @@ export class AddressController{
 
     @ApiOperation({ summary: "Get an address by ID" })
     @ApiResponse({ status: 200, description: "Returns the address" })
-    @ApiResponse({ status: 404, description: "Address not found" })
+    @ApiResponse({ status: 404, description: "Address not found" })    
+    @UseInterceptors(CacheInterceptor)
+    @CacheTTL(60)
     @Get("/:id")
     async findAddress(@Param("id") id: number) {
         return await this.addressService.findAddress(id);
@@ -38,11 +43,13 @@ export class AddressController{
     @ApiResponse({ status: 400, description: "Invalid request body" })
     @ApiResponse({ status: 401, description: "Unauthorized" })
     @ApiResponse({ status: 404, description: "Address not found" })
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.ADMIN)
     @Put("/:id")
     async updateAddress(@Param("id") id: number, @Body() newData: UpdateAddressDto) {
         const updatedAddress = await this.addressService.updateAddress(id, newData);
-        await this.cacheManager.del("address")
+        await this.cacheManager.del("address:list");
+        await this.cacheManager.del(`/addresses/${id}`);
         return {
             address: updatedAddress,
             message: "Address updated!"

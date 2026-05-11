@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from "@nestjs/common";
 import { ExternalPlacesService } from "./external-places.service";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { SearchExternalPlacesDto } from "./dto/search-external-places.dto";
 
 @ApiTags("External Places")
 @Controller("/external-places")
@@ -12,8 +13,8 @@ export class ExternalPlacesController{
     @ApiResponse({ status: 200, description: "Returns the list of external places matching the search" })
     @ApiResponse({ status: 400, description: "Invalid query parameters" })
     @Get()
-    async search(@Query("q") q: string, @Query("city") city: string){
-        const result = await this.externalPlaceService.search(q, city);
+    async search(@Query() query: SearchExternalPlacesDto){
+        const result = await this.externalPlaceService.search(query.q, query.city);
         return result;
     }
 }
