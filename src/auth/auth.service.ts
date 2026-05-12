@@ -7,6 +7,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/CreateUser.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -43,7 +44,11 @@ export class AuthService {
       password: cryptoPassword,
     });
 
-    return await this.userRepository.save(user);
+    try {
+      return await this.userRepository.save(user);
+    } catch {
+      throw new InternalServerErrorException('Failed to register user');
+    }
   }
 
   async loginUser(userData: LoginUserDto) {
@@ -74,12 +79,21 @@ export class AuthService {
     }
 
     userExist.role = updatedRole.role;
-    return this.userRepository.save(userExist);
+
+    try {
+      return this.userRepository.save(userExist);
+    } catch {
+      throw new InternalServerErrorException('Failed to update user role');
+    }
   }
 
   async listUsers() {
-    return this.userRepository.find({
-      select: ['id', 'name', 'role'],
-    });
+    try {
+      return this.userRepository.find({
+        select: ['id', 'name', 'role'],
+      });
+    } catch {
+      throw new InternalServerErrorException('Failed to list users');
+    }
   }
 }

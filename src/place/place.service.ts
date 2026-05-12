@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -71,9 +72,13 @@ export class PlaceService {
       address,
     });
 
-    const result = await this.placeRepository.save(place);
-    this.appGateway.sendPlaceUpdate(result);
-    return result;
+    try {
+      const result = await this.placeRepository.save(place);
+      this.appGateway.sendPlaceUpdate(result);
+      return result;
+    } catch {
+      throw new InternalServerErrorException('Failed to create place!');
+    }
   }
 
   async updatePlace(id: number, placeData: UpdatePlaceDto) {
@@ -95,11 +100,19 @@ export class PlaceService {
       Object.assign(place.address, addressData);
     }
 
-    return await this.placeRepository.save(place);
+    try {
+      return await this.placeRepository.save(place);
+    } catch {
+      throw new InternalServerErrorException('Failed to update place');
+    }
   }
 
   async deletePlace(id: number) {
     const place = await this.findPlace(id);
-    return await this.placeRepository.remove(place);
+    try {
+      return await this.placeRepository.remove(place);
+    } catch {
+      throw new InternalServerErrorException('Failed to delete place');
+    }
   }
 }

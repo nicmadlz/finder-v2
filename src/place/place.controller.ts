@@ -31,6 +31,7 @@ import {
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { PlaceEntity } from './place.entity';
 
 @ApiTags('Places')
 @Controller('/places')
@@ -71,7 +72,11 @@ export class PlaceController {
   }
 
   @ApiOperation({ summary: 'Get a place by ID' })
-  @ApiResponse({ status: 200, description: 'Returns the place' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the place',
+    type: PlaceEntity,
+  })
   @ApiResponse({ status: 404, description: 'Place not found' })
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(60)
@@ -96,7 +101,9 @@ export class PlaceController {
     await this.cacheManager.del('places:list');
     await this.cacheManager.del('address:list');
     await this.cacheManager.del(`/places/${id}`);
-    await this.cacheManager.del(`/addresses/${updatedPlace.address.id}`);
+    if (updatedPlace.address?.id) {
+      await this.cacheManager.del(`/addresses/${updatedPlace.address.id}`);
+    }
     return { place: updatedPlace, message: 'Place updated!' };
   }
 

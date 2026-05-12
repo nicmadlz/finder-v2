@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AddressEntity } from './address.entity';
 import { Repository } from 'typeorm';
@@ -26,6 +30,10 @@ export class AddressService {
   async updateAddress(id: number, addressData: UpdateAddressDto) {
     const address = await this.findAddress(id);
     Object.assign(address, addressData);
-    return await this.addressRepository.save(address);
+    try {
+      return await this.addressRepository.save(address);
+    } catch {
+      throw new InternalServerErrorException('Failed to update address');
+    }
   }
 }

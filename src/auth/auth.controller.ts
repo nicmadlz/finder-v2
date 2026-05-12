@@ -21,6 +21,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { UpdateRoleDto } from './dto/UpdateRole.dto';
+import { HttpCode } from '@nestjs/common';
 
 @ApiTags('Auth')
 @Controller('/auth')
@@ -46,9 +47,10 @@ export class AuthController {
     };
   }
 
+  @HttpCode(200)
   @ApiOperation({ summary: 'Log in an existing user' })
   @ApiResponse({
-    status: 201,
+    status: 200,
     description: 'Returns the JWT token and a success message',
   })
   @ApiResponse({ status: 400, description: 'Invalid request body' })
@@ -77,6 +79,7 @@ export class AuthController {
     return await this.authService.updateRole(id, body);
   }
 
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'List all users' })
   @ApiResponse({
     status: 200,
