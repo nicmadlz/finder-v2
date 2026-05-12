@@ -4,86 +4,163 @@ A REST API for discovering places in Porto Alegre — cafes, restaurants, bars, 
 
 ---
 
-## About
+## Overview
 
-Finder lets users explore and manage places across Porto Alegre. Built with NestJS, TypeScript, and PostgreSQL, with JWT authentication and database migrations via TypeORM.
+Finder exposes a place catalogue with authentication, role-based access control, and real-time updates. It integrates with an external places provider to enrich the local catalogue and uses a background queue to keep data in sync.
+
+Full API reference is generated from the code and available through Swagger UI once the application is running (see [API Documentation](#api-documentation)).
 
 ---
 
-## Stack
+## Features
 
-- NestJS
-- TypeScript
-- TypeORM
-- PostgreSQL
-- JWT
-- bcrypt
-- class-validator
-- Docker
+- **Authentication & Authorization** — JWT-based login with role-based access control (`user` / `admin`).
+- **Places & Addresses** — full CRUD with paginated listing.
+- **External Places Search** — proxy to an external provider for discovery beyond the local catalogue.
+- **Caching** — Redis-backed response cache on read endpoints.
+- **Background Jobs** — recurring synchronization with the external provider via BullMQ.
+- **Real-time Updates** — WebSocket gateway (Socket.IO) emits `place-updated` events on writes.
+- **Rate Limiting** — 10 requests per minute per client via `@nestjs/throttler`.
+- **Validation** — request payloads validated with `class-validator` and a global `ValidationPipe`.
+- **Centralized Error Handling** — global exception filter for consistent error responses.
+- **API Documentation** — auto-generated OpenAPI (Swagger) docs.
+
+---
+
+## Tech Stack
+
+| Layer            | Technology                              |
+| ---------------- | --------------------------------------- |
+| Framework        | NestJS 11 + TypeScript                  |
+| Database         | PostgreSQL + TypeORM                    |
+| Cache & Queues   | Redis + BullMQ                          |
+| Authentication   | JWT (`@nestjs/jwt`, Passport) + bcrypt  |
+| Real-time        | Socket.IO (`@nestjs/websockets`)        |
+| Validation       | class-validator, class-transformer      |
+| Documentation    | Swagger (`@nestjs/swagger`)             |
+| Testing          | Jest (unit) + Supertest (e2e)           |
+| Infrastructure   | Docker, Docker Compose                  |
 
 ---
 
 ## Requirements
 
-- Node.js >= 18
+- Node.js `>= 18`
 - npm
 - Docker and Docker Compose
 
 ---
 
-## Setup
+## Getting Started
 
-**1. Clone the repository**
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/nicmadlz/finder-v2.git
 cd finder-v2
 ```
 
-**2. Install dependencies**
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-**3. Configure environment variables**
+### 3. Configure environment variables
 
-Create a `.env` file at the root:
+Create a `.env` file at the project root:
 
 ```env
+# Database
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_NAME=finder
+
+# pgAdmin (optional)
+DB_ADMIN_EMAIL=admin@example.com
+
+# JWT
 JWT_SECRET=your_secret_key
+
+# Redis
+REDIS_HOST=localhost
+
+# CORS (WebSocket)
+CORS_ORIGIN=http://localhost:3000
+
+# Admin seed — credentials used by `npm run seed` to create the initial admin user
+ADMIN_EMAIL=admin@finder.com
+ADMIN_PASSWORD=change_me
 ```
 
-**4. Start the database**
+> The seed script creates the admin only if no admin user exists yet, so it is safe to re-run. Change `ADMIN_EMAIL` / `ADMIN_PASSWORD` before running it in any non-local environment.
+
+### 4. Start the infrastructure
+
+Spins up PostgreSQL, the test database, pgAdmin, and Redis:
 
 ```bash
 docker-compose up -d
 ```
 
-**5. Run migrations**
+### 5. Run migrations
 
 ```bash
 npm run migration:run
 ```
 
-**6. Start the application**
+### 6. (Optional) Seed an admin user
+
+Make sure `ADMIN_EMAIL` and `ADMIN_PASSWORD` are set in your `.env`, then run:
 
 ```bash
-# development
+npm run seed
+```
+
+This creates a user with the `admin` role using those credentials. The script is a no-op if an admin already exists.
+
+### 7. Start the application
+
+```bash
+# development (watch mode)
 npm run dev
 
 # production
+npm run build
 npm run start:prod
 ```
 
+The API will be available at `http://localhost:3000`.
+
 ---
 
-## Migrations
+## API Documentation
+
+After starting the application, the full interactive API reference is available at:
+
+```
+http://localhost:3000/api
+```
+
+It includes every endpoint, request/response schema, and an authentication flow you can use to try requests directly from the browser. Use the **Authorize** button with a Bearer token obtained from `POST /auth/login`.
+
+---
+
+## Authentication
+
+Protected endpoints require a Bearer token in the `Authorization` header:
+
+```http
+Authorization: Bearer <token>
+```
+
+Tokens are obtained via `POST /auth/login`. Admin-only endpoints additionally require the authenticated user to hold the `admin` role.
+
+---
+
+## Database Migrations
 
 ```bash
 # Generate a migration from entity changes
@@ -94,48 +171,30 @@ npm run migration:run
 
 # Revert the last migration
 npm run migration:revert
+
+# Apply migrations against the test database
+npm run migration:run:test
 ```
 
 ---
 
-## Endpoints
+## Testing
 
-### Auth
+```bash
+# unit tests
+npm test
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/auth/register` | Register a new user | No |
-| POST | `/auth/login` | Login and get JWT token | No |
+# unit tests in watch mode
+npm run test:watch
 
-### Places
+# coverage report
+npm run test:cov
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/places` | Create a place | Yes |
-| GET | `/places` | List all places | No |
-| GET | `/places/:id` | Get a place by ID | No |
-| PUT | `/places/:id` | Update a place | Yes |
-| DELETE | `/places/:id` | Delete a place | Yes |
-
-### Addresses
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/addresses` | List all addresses | No |
-| GET | `/addresses/:id` | Get an address by ID | No |
-| PUT | `/addresses/:id` | Update an address | Yes |
-
----
-
-## Authentication
-
-Protected routes require a Bearer token in the `Authorization` header:
-
-```
-Authorization: Bearer <token>
+# end-to-end tests
+npm run test:e2e
 ```
 
-Get the token by calling `POST /auth/login`.
+End-to-end tests run against the dedicated `postgres-test` container exposed on port `5433`.
 
 ---
 
@@ -143,41 +202,38 @@ Get the token by calling `POST /auth/login`.
 
 ```
 src/
-├── address/
-│   ├── dto/
-│       ├── CreateAddress.dto.ts
-│       ├── UpdateAddress.dto.ts
-│   ├── address.controller.ts
-│   ├── address.entity.ts
-│   ├── address.module.ts
-│   ├── address.repository.ts
-│   └── address.service.ts
-├── auth/
-│   ├── dto/
-│       ├── CreateUser.dto.ts
-│       ├── LoginUser.dto.ts
-│   ├── guards/jwt-auth.guard.ts
-│   ├── auth.controller.ts
-│   ├── auth.module.ts
-│   ├── auth.service.ts
-│   └── user.entity.ts
-├── config/
-│   ├── migrations/
-│   ├── data-source.ts
-│   └── postgres.config.service.ts
-├── filters/
-│   └── global-exception.filter.ts
-├── place/
-│   ├── dto/
-│       ├── CreatePlace.dto.ts
-│       ├── UpdatePlace.dto.ts
-│   ├── place.controller.ts
-│   ├── place.entity.ts
-│   ├── place.module.ts
-│   └── place.service.ts
+├── address/             # Address module (entity, DTOs, controller, service)
+├── auth/                # Authentication, roles, guards, decorators
+├── common/              # Shared interceptors and utilities
+├── config/              # TypeORM data source, migrations, seeds
+├── external-places/     # External provider integration
+├── filters/             # Global exception filter
+├── gateway/             # WebSocket gateway (real-time updates)
+├── jobs/                # BullMQ processors (background sync)
+├── place/               # Place module (entity, DTOs, controller, service)
 ├── app.module.ts
 └── main.ts
+
+test/                    # End-to-end tests
 ```
+
+---
+
+## Scripts Reference
+
+| Script                       | Description                                    |
+| ---------------------------- | ---------------------------------------------- |
+| `npm run dev`                | Start the app in watch mode                    |
+| `npm run start:prod`         | Start the compiled app                         |
+| `npm run build`              | Compile TypeScript to `dist/`                  |
+| `npm run lint`               | Lint and auto-fix sources                      |
+| `npm run format`             | Format sources with Prettier                   |
+| `npm test`                   | Run unit tests                                 |
+| `npm run test:e2e`           | Run end-to-end tests                           |
+| `npm run migration:generate` | Generate a new migration from entity changes  |
+| `npm run migration:run`      | Apply pending migrations                       |
+| `npm run migration:revert`   | Revert the last applied migration              |
+| `npm run seed`               | Seed an initial admin user                     |
 
 ---
 

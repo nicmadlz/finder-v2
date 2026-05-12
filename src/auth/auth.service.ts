@@ -1,79 +1,85 @@
-import bcrypt from "bcrypt";
-import { Repository } from "typeorm";
-import { UserEntity } from "./user.entity";
-import { InjectRepository } from "@nestjs/typeorm";
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { CreateUserDto } from "./dto/CreateUser.dto";
-import { JwtService } from "@nestjs/jwt";
-import { LoginUserDto } from "./dto/LoginUser.dto";
-import { Role } from "./enums/role.enum";
-import { UpdateRoleDto } from "./dto/UpdateRole.dto";
+import bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
+import { UserEntity } from './user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { CreateUserDto } from './dto/CreateUser.dto';
+import { JwtService } from '@nestjs/jwt';
+import { LoginUserDto } from './dto/LoginUser.dto';
+import { UpdateRoleDto } from './dto/UpdateRole.dto';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        @InjectRepository(UserEntity)
-        private readonly userRepository: Repository<UserEntity>,
-        private readonly jwtService: JwtService) { }
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+    private readonly jwtService: JwtService,
+  ) {}
 
-    private async findUserByEmail(email: string) {
-        return await this.userRepository.findOne({
-            where: {
-                email: email
-            }
-        })
+  private async findUserByEmail(email: string) {
+    return await this.userRepository.findOne({
+      where: {
+        email: email,
+      },
+    });
+  }
+
+  async registerUser(userData: CreateUserDto) {
+    const exist = await this.findUserByEmail(userData.email);
+    if (exist) {
+      throw new ConflictException('This email is already in use!');
     }
 
+    const cryptoPassword = await bcrypt.hash(userData.password, 10);
 
-    async registerUser(userData: CreateUserDto) {
-        const exist = await this.findUserByEmail(userData.email);
-        if (exist) {
-            throw new ConflictException("This email is already in use!")
-        }
+    const user = Object.assign(new UserEntity(), {
+      name: userData.name,
+      email: userData.email,
+      password: cryptoPassword,
+    });
 
-        const cryptoPassword = await bcrypt.hash(userData.password, 10);
+    return await this.userRepository.save(user);
+  }
 
-
-        const user = Object.assign(new UserEntity(), {
-            name: userData.name,
-            email: userData.email,
-            password: cryptoPassword
-        })
-
-        return await this.userRepository.save(user);
+  async loginUser(userData: LoginUserDto) {
+    const exist = await this.findUserByEmail(userData.email);
+    if (!exist) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    async loginUser(userData: LoginUserDto) {
-        const exist = await this.findUserByEmail(userData.email);
-        if (!exist) {
-            throw new UnauthorizedException("Invalid credentials");
-        }
-
-        const passwordCompare = await bcrypt.compare(userData.password, exist.password)
-        if (!passwordCompare) {
-            throw new UnauthorizedException("Invalid credentials");
-        }
-
-        const payload = { sub: exist.id, email: exist.email, role: exist.role };
-        return this.jwtService.sign(payload);
+    const passwordCompare = await bcrypt.compare(
+      userData.password,
+      exist.password,
+    );
+    if (!passwordCompare) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    async updateRole(id: string, updatedRole: UpdateRoleDto) {
-        const userExist = await this.userRepository.findOne({
-            where: { id }
-        });
+    const payload = { sub: exist.id, email: exist.email, role: exist.role };
+    return this.jwtService.sign(payload);
+  }
 
-        if (!userExist) {
-            throw new NotFoundException("User not found");
-        }
+  async updateRole(id: string, updatedRole: UpdateRoleDto) {
+    const userExist = await this.userRepository.findOne({
+      where: { id },
+    });
 
-        userExist.role = updatedRole.role;
-        return this.userRepository.save(userExist);
+    if (!userExist) {
+      throw new NotFoundException('User not found');
     }
 
-    async listUsers() {
-        return this.userRepository.find({
-            select: ['id', 'name', 'role']
-        });
-    }
+    userExist.role = updatedRole.role;
+    return this.userRepository.save(userExist);
+  }
+
+  async listUsers() {
+    return this.userRepository.find({
+      select: ['id', 'name', 'role'],
+    });
+  }
 }

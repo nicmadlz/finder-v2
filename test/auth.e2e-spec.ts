@@ -10,6 +10,7 @@ import { DataSource } from 'typeorm';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
+  let server: Parameters<typeof request>[0];
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -17,13 +18,17 @@ describe('Auth (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true
-    }));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
     app.useGlobalFilters(new GlobalExceptionFilter());
     await app.init();
+
+    server = app.getHttpServer() as Parameters<typeof request>[0];
 
     const dataSource = app.get(DataSource);
     await dataSource.query('DELETE FROM "users"');
@@ -34,52 +39,52 @@ describe('Auth (e2e)', () => {
   });
 
   it('POST /auth/register', async () => {
-
-    const response = await request(app.getHttpServer())
+    const response = await request(server)
       .post('/auth/register')
       .send({ name: 'Nicolas', email: 'nicolas@test.com', password: '123456' });
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
       user: {
-        name: 'Nicolas'
+        name: 'Nicolas',
       },
-      message: 'User created!'
+      message: 'User created!',
     });
   });
 
-  it("POST /auth/login", async () => {
-    const response = await request(app.getHttpServer())
-      .post("/auth/login")
-      .send({ email: "nicolas@test.com", password: "123456" })
+  it('POST /auth/login', async () => {
+    const response = await request(server)
+      .post('/auth/login')
+      .send({ email: 'nicolas@test.com', password: '123456' });
 
     expect(response.status).toBe(201);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(response.body.token.accessToken).toBeDefined();
-    expect(typeof response.body.token.accessToken).toBe("string");
-  })
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    expect(typeof response.body.token.accessToken).toBe('string');
+  });
 
-  it("Same Email - POST /auth/register", async () => {
-    const response = await request(app.getHttpServer())
+  it('Same Email - POST /auth/register', async () => {
+    const response = await request(server)
       .post('/auth/register')
       .send({ name: 'Nicolas', email: 'nicolas@test.com', password: '123456' });
-    
-    expect(response.status).toBe(409)
-  })
 
-  it("Wrong Email - POST /auth/login", async () => {
-    const response = await request(app.getHttpServer())
-      .post("/auth/login")
-      .send({ email: "wrongEmail@test.com", password: "123456" })
+    expect(response.status).toBe(409);
+  });
 
-    expect(response.status).toBe(401);
-  })
-
-    it("Wrong Password - POST /auth/login", async () => {
-    const response = await request(app.getHttpServer())
-      .post("/auth/login")
-      .send({ email: "nicolas@test.com", password: "wrongPassword" })
+  it('Wrong Email - POST /auth/login', async () => {
+    const response = await request(server)
+      .post('/auth/login')
+      .send({ email: 'wrongEmail@test.com', password: '123456' });
 
     expect(response.status).toBe(401);
-  })
+  });
 
+  it('Wrong Password - POST /auth/login', async () => {
+    const response = await request(server)
+      .post('/auth/login')
+      .send({ email: 'nicolas@test.com', password: 'wrongPassword' });
+
+    expect(response.status).toBe(401);
+  });
 });

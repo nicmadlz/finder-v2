@@ -8,212 +8,221 @@ import { AppModule } from '../src/app.module';
 import { GlobalExceptionFilter } from '../src/filters/global-exception.filter';
 import { DataSource } from 'typeorm';
 
+interface LoginResponse {
+  token: { accessToken: string };
+}
+
+interface PlaceResponse {
+  createdPlace: { id: number; name: string };
+}
+
 describe('Place (e2e)', () => {
-    let app: INestApplication;
-    let token: string;
-    let id: number;
+  let app: INestApplication;
+  let token: string;
+  let id: number;
+  let server: Parameters<typeof request>[0];
 
-    beforeAll(async () => {
-        const moduleFixture: TestingModule = await Test.createTestingModule({
-            imports: [AppModule],
-        }).compile();
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-        app = moduleFixture.createNestApplication();
-        app.useGlobalPipes(new ValidationPipe({
-            transform: true,
-            whitelist: true,
-            forbidNonWhitelisted: true
-        }));
-        app.useGlobalFilters(new GlobalExceptionFilter());
-        await app.init();
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+    app.useGlobalFilters(new GlobalExceptionFilter());
+    await app.init();
 
-        const dataSource = app.get(DataSource);
-        await dataSource.query('DELETE FROM "places"');
-        await dataSource.query('DELETE FROM "users"');
-        await dataSource.query('DELETE FROM "address"');
-        
-        
-        await request(app.getHttpServer())
-        .post('/auth/register')
-        .send({ name: 'Nicolas', email: 'nicolas@test.com', password: '123456' });
-        
-        await dataSource.query(
-            `UPDATE "users" SET "role" = 'admin' WHERE "email" = 'nicolas@test.com'`
-        );
-        
-        const loginResponse = await request(app.getHttpServer())
-            .post('/auth/login')
-            .send({ email: 'nicolas@test.com', password: '123456' });
+    server = app.getHttpServer() as Parameters<typeof request>[0];
 
-        token = loginResponse.body.token.accessToken;
-    });
+    const dataSource = app.get(DataSource);
+    await dataSource.query('DELETE FROM "places"');
+    await dataSource.query('DELETE FROM "users"');
+    await dataSource.query('DELETE FROM "address"');
 
-    afterAll(async () => {
-        await app.close();
-    });
+    await request(server)
+      .post('/auth/register')
+      .send({ name: 'Nicolas', email: 'nicolas@test.com', password: '123456' });
 
-    it("POST - /places", async () => {
-        const response = await request(app.getHttpServer())
-            .post("/places")
-            .set("Authorization", `Bearer ${token}`)
-            .send({
-                name: 'Test',
-                category: 'test',
-                priceRange: 2,
-                rating: 4,
-                address: {
-                    street: 'test',
-                    number: 123,
-                    neighborhood: 'test',
-                    cep: 90440170
-                }
-            });
+    await dataSource.query(
+      `UPDATE "users" SET "role" = 'admin' WHERE "email" = 'nicolas@test.com'`,
+    );
 
-        id = response.body.createdPlace.id;
+    const loginResponse = await request(server)
+      .post('/auth/login')
+      .send({ email: 'nicolas@test.com', password: '123456' });
 
-        expect(response.status).toBe(201);
-        expect(response.body.createdPlace.name).toBe("Test")
-    })
+    token = (loginResponse.body as LoginResponse).token.accessToken;
+  });
 
-    it("GET - /places", async () => {
-        const response = await request(app.getHttpServer())
-            .get("/places?page=1&pageSize=10")
+  afterAll(async () => {
+    await app.close();
+  });
 
-        expect(response.status).toBe(200);
-        expect(response.body.data).toBeInstanceOf(Array)
-    })
+  it('POST - /places', async () => {
+    const response = await request(server)
+      .post('/places')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Test',
+        category: 'test',
+        priceRange: 2,
+        rating: 4,
+        address: {
+          street: 'test',
+          number: 123,
+          neighborhood: 'test',
+          cep: 90440170,
+        },
+      });
 
-    it("GET - /places:id", async () => {
-        const response = await request(app.getHttpServer())
-            .get(`/places/${id}`)
+    id = (response.body as PlaceResponse).createdPlace.id;
 
-        expect(response.status).toBe(200);
-    })
+    expect(response.status).toBe(201);
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
+    expect(response.body.createdPlace.name).toBe('Test');
+  });
 
-    it("PUT - /places/:id", async () => {
-        const response = await request(app.getHttpServer())
-            .put(`/places/${id}`)
-            .set("Authorization", `Bearer ${token}`)
-            .send({ name: "nameUpdated" });
+  it('GET - /places', async () => {
+    const response = await request(server).get('/places?page=1&pageSize=10');
 
-        expect(response.status).toBe(200);
-        expect(response.body.place.name).toBe("nameUpdated")
-    })
+    expect(response.status).toBe(200);
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
+    expect(response.body.data).toBeInstanceOf(Array);
+  });
 
-    it("Duplicated Name - POST /places", async () => {
-        const response = await request(app.getHttpServer())
-            .post("/places")
-            .set("Authorization", `Bearer ${token}`)
-            .send({
-                name: 'nameUpdated',
-                category: 'test',
-                priceRange: 2,
-                rating: 4,
-                address: {
-                    street: 'test',
-                    number: 123,
-                    neighborhood: 'test',
-                    cep: 90440170
-                }
-            });
+  it('GET - /places:id', async () => {
+    const response = await request(server).get(`/places/${id}`);
 
-        expect(response.status).toBe(409);
-    })
+    expect(response.status).toBe(200);
+  });
 
-    it("Without Token - PUT /places/:id", async () => {
-        const response = await request(app.getHttpServer())
-            .put(`/places/${id}`)
-            .send({ name: "nameUpdated2" });
+  it('PUT - /places/:id', async () => {
+    const response = await request(server)
+      .put(`/places/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'nameUpdated' });
 
-        expect(response.status).toBe(401);
-    })
+    expect(response.status).toBe(200);
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
+    expect(response.body.place.name).toBe('nameUpdated');
+  });
 
-    it("Invalid Id - PUT /places/:id", async () => {
-        const response = await request(app.getHttpServer())
-            .put(`/places/-1`)
-            .set("Authorization", `Bearer ${token}`)
-            .send({ name: "nameUpdated2" });
+  it('Duplicated Name - POST /places', async () => {
+    const response = await request(server)
+      .post('/places')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'nameUpdated',
+        category: 'test',
+        priceRange: 2,
+        rating: 4,
+        address: {
+          street: 'test',
+          number: 123,
+          neighborhood: 'test',
+          cep: 90440170,
+        },
+      });
 
-        expect(response.status).toBe(404);
-    })
+    expect(response.status).toBe(409);
+  });
 
-    it("Duplicated name - PUT /places/:id", async () => {
-        const responsePost = await request(app.getHttpServer())
-            .post("/places")
-            .set("Authorization", `Bearer ${token}`)
-            .send({
-                name: 'Test',
-                category: 'test',
-                priceRange: 2,
-                rating: 4,
-                address: {
-                    street: 'test',
-                    number: 123,
-                    neighborhood: 'test',
-                    cep: 90440170
-                }
-            });
+  it('Without Token - PUT /places/:id', async () => {
+    const response = await request(server)
+      .put(`/places/${id}`)
+      .send({ name: 'nameUpdated2' });
 
-        const id2 = responsePost.body.createdPlace.id;
+    expect(response.status).toBe(401);
+  });
 
+  it('Invalid Id - PUT /places/:id', async () => {
+    const response = await request(server)
+      .put(`/places/-1`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'nameUpdated2' });
 
-        const response = await request(app.getHttpServer())
-            .put(`/places/${id2}`)
-            .set("Authorization", `Bearer ${token}`)
-            .send({ name: "nameUpdated" });
+    expect(response.status).toBe(404);
+  });
 
-        expect(response.status).toBe(409);
-    })
+  it('Duplicated name - PUT /places/:id', async () => {
+    const responsePost = await request(server)
+      .post('/places')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Test',
+        category: 'test',
+        priceRange: 2,
+        rating: 4,
+        address: {
+          street: 'test',
+          number: 123,
+          neighborhood: 'test',
+          cep: 90440170,
+        },
+      });
 
+    const id2 = (responsePost.body as PlaceResponse).createdPlace.id;
 
-    it("Without Token - POST /places", async () => {
-        const response = await request(app.getHttpServer())
-            .post("/places")
-            .send({
-                name: 'Test2',
-                category: 'test',
-                priceRange: 2,
-                rating: 4,
-                address: {
-                    street: 'test',
-                    number: 123,
-                    neighborhood: 'test',
-                    cep: 90440170
-                }
-            });
+    const response = await request(server)
+      .put(`/places/${id2}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'nameUpdated' });
 
-        expect(response.status).toBe(401)
-    })
+    expect(response.status).toBe(409);
+  });
 
-    it("Invalid Id - GET /places:id", async () => {
-        const response = await request(app.getHttpServer())
-            .get(`/places/-1`)
+  it('Without Token - POST /places', async () => {
+    const response = await request(server)
+      .post('/places')
+      .send({
+        name: 'Test2',
+        category: 'test',
+        priceRange: 2,
+        rating: 4,
+        address: {
+          street: 'test',
+          number: 123,
+          neighborhood: 'test',
+          cep: 90440170,
+        },
+      });
 
-        expect(response.status).toBe(404);
-    })
+    expect(response.status).toBe(401);
+  });
 
-    it("Without Token - DELETE /places/:id", async () => {
-        const response = await request(app.getHttpServer())
-            .delete(`/places/${id}`)
+  it('Invalid Id - GET /places:id', async () => {
+    const response = await request(server).get(`/places/-1`);
 
-        expect(response.status).toBe(401);
-    })
+    expect(response.status).toBe(404);
+  });
 
-    it("DELETE - /places/:id", async () => {
-        const response = await request(app.getHttpServer())
-            .delete(`/places/-1`)
-            .set("Authorization", `Bearer ${token}`)
+  it('Without Token - DELETE /places/:id', async () => {
+    const response = await request(server).delete(`/places/${id}`);
 
-        expect(response.status).toBe(404);
-    })
+    expect(response.status).toBe(401);
+  });
 
-    it("DELETE - /places/:id", async () => {
-        const response = await request(app.getHttpServer())
-            .delete(`/places/${id}`)
-            .set("Authorization", `Bearer ${token}`)
+  it('DELETE - /places/:id (invalid)', async () => {
+    const response = await request(server)
+      .delete(`/places/-1`)
+      .set('Authorization', `Bearer ${token}`);
 
-        expect(response.status).toBe(200);
-        expect(response.body.message).toBe("Place deleted!")
-    })
+    expect(response.status).toBe(404);
+  });
 
-})
+  it('DELETE - /places/:id', async () => {
+    const response = await request(server)
+      .delete(`/places/${id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
+    expect(response.body.message).toBe('Place deleted!');
+  });
+});

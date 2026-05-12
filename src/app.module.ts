@@ -8,11 +8,11 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
 import { ExternalPlacesModule } from './external-places/external-places.module';
-import { BullModule } from "@nestjs/bullmq"
+import { BullModule } from '@nestjs/bullmq';
 import { JobsModule } from './jobs/jobs.module';
 import { GatewayModule } from './gateway/gateway.module';
-import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler"
-import { APP_GUARD } from "@nestjs/core"
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -23,15 +23,17 @@ import { APP_GUARD } from "@nestjs/core"
     JobsModule,
     GatewayModule,
     ConfigModule.forRoot({
-      isGlobal: true
+      isGlobal: true,
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 10,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       useClass: PostgresConfigService,
-      inject: [PostgresConfigService]
+      inject: [PostgresConfigService],
     }),
     CacheModule.registerAsync({
       isGlobal: true,
@@ -47,17 +49,17 @@ import { APP_GUARD } from "@nestjs/core"
     }),
     BullModule.forRoot({
       connection: {
-        host: process.env.REDIS_HOST ?? "localhost",
+        host: process.env.REDIS_HOST ?? 'localhost',
         port: 6379,
-      }
-    })
+      },
+    }),
   ],
   controllers: [],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard
-    }
+      useClass: ThrottlerGuard,
+    },
   ],
 })
-export class AppModule { }
+export class AppModule {}
