@@ -16,6 +16,8 @@ export class PlaceService {
   constructor(
     @InjectRepository(PlaceEntity)
     private readonly placeRepository: Repository<PlaceEntity>,
+    @InjectRepository(AddressEntity)
+    private readonly addressRepository: Repository<AddressEntity>,
     private appGateway: AppGateway,
   ) {}
 
@@ -43,11 +45,21 @@ export class PlaceService {
   }
 
   async createPlace(placeData: CreatePlaceDto) {
-    const exist = await this.placeRepository.findOne({
+    const existPlace = await this.placeRepository.findOne({
       where: { name: placeData.name },
     });
-    if (exist) {
+    if (existPlace) {
       throw new ConflictException('This place has already been created!');
+    }
+
+    const existAddress = await this.addressRepository.findOne({
+      where: {
+        street: placeData.address.street,
+        number: placeData.address.number,
+      },
+    });
+    if (existAddress) {
+      throw new ConflictException('This address has already been created!');
     }
 
     const address = Object.assign(new AddressEntity(), placeData.address);

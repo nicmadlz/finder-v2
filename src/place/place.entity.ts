@@ -21,7 +21,13 @@ export class PlaceEntity {
   @Column({ name: 'priceRange', nullable: false })
   priceRange!: number;
 
-  @Column({ name: 'rating', nullable: false })
+  @Column({
+    name: 'rating',
+    nullable: false,
+    type: 'decimal',
+    precision: 3,
+    scale: 2,
+  })
   rating!: number;
 
   @OneToOne(() => AddressEntity, {
