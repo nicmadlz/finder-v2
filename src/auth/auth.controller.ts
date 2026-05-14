@@ -56,8 +56,8 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   @ApiResponse({ status: 401, description: 'Invalid email or password' })
   @Post('/login')
-  async loginUser(@Body() userData: LoginUserDto) {
-    const token = await this.authService.loginUser(userData);
+  async loginUser(@Body() loginUserData: LoginUserDto) {
+    const token = await this.authService.loginUser(loginUserData);
 
     return {
       token: token,

@@ -35,5 +35,5 @@ export class UpdateAddressDto {
   @Min(10000000, { message: 'Cep must have 8 digits' })
   @Max(99999999, { message: 'Cep must have 8 digits' })
   @IsOptional()
-  cep?: number;
+  cep?: string;
 }

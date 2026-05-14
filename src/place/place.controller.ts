@@ -64,10 +64,7 @@ export class PlaceController {
   @CacheKey('places:list')
   @CacheTTL(60)
   @Get()
-  async listPlaces(
-    @Query('page') page: number,
-    @Query('pageSize') pageSize: number,
-  ) {
+  async listPlaces(@Query('page') page = 1, @Query('pageSize') pageSize = 10) {
     return await this.placeService.listPlaces(+page, +pageSize);
   }
 

@@ -22,5 +22,5 @@ export class CreateAddressDto {
   @IsNumber(undefined, { message: 'Cep must be a number' })
   @Min(10000000, { message: 'Cep must have 8 digits' })
   @Max(99999999, { message: 'Cep must have 8 digits' })
-  cep!: number;
+  cep!: string;
 }

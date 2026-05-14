@@ -15,8 +15,8 @@ export class AddressEntity {
   @Column({ name: 'neighborhood', length: 100, nullable: false })
   neighborhood!: string;
 
-  @Column({ name: 'Cep', nullable: false })
-  cep!: number;
+  @Column({ name: 'Cep', nullable: false, type: 'varchar', length: 20 })
+  cep!: string;
 
   @OneToOne(() => PlaceEntity, (place) => place.address)
   place!: PlaceEntity;
