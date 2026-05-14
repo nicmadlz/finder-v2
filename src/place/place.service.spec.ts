@@ -5,6 +5,7 @@ import { PlaceEntity } from './place.entity';
 import { AddressEntity } from 'src/address/address.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { AppGateway } from 'src/gateway/app.gateway';
+import { ViaCepService } from 'src/address/viaCep.service';
 
 describe('PlaceService', () => {
   let placeService: PlaceService;
@@ -29,6 +30,19 @@ describe('PlaceService', () => {
             sendPlaceUpdate: jest.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(AddressEntity),
+          useValue: {
+            findOne: jest.fn(),
+            save: jest.fn(),
+          },
+        },
+        {
+          provide: ViaCepService,
+          useValue: {
+            search: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -39,6 +53,12 @@ describe('PlaceService', () => {
     jest
       .spyOn(placeService['placeRepository'], 'findOne')
       .mockResolvedValue(null);
+
+    jest.spyOn(placeService['viaCepService'], 'search').mockResolvedValue({
+      cep: '90440-130',
+      logradouro: 'Rua Teste',
+      bairro: 'Centro',
+    });
 
     jest.spyOn(placeService['placeRepository'], 'save').mockResolvedValue({
       id: 1,
@@ -51,7 +71,7 @@ describe('PlaceService', () => {
         street: 'Test',
         number: 111,
         neighborhood: 'Centro',
-        cep: 90440170,
+        cep: '90440170',
       } as AddressEntity,
     });
 
@@ -62,10 +82,8 @@ describe('PlaceService', () => {
         priceRange: 12,
         rating: 5,
         address: {
-          street: 'Test',
           number: 111,
-          neighborhood: 'Centro',
-          cep: 90440170,
+          cep: '90440170',
         },
       }),
     ).resolves.toMatchObject({
@@ -77,7 +95,7 @@ describe('PlaceService', () => {
         street: 'Test',
         number: 111,
         neighborhood: 'Centro',
-        cep: 90440170,
+        cep: '90440170',
       },
     });
   });
@@ -98,7 +116,7 @@ describe('PlaceService', () => {
               street: 'Test',
               number: 111,
               neighborhood: 'Centro',
-              cep: 90440170,
+              cep: '90440170',
             } as AddressEntity,
           },
         ],
@@ -220,10 +238,8 @@ describe('PlaceService', () => {
         priceRange: 12,
         rating: 5,
         address: {
-          street: 'teste',
           number: 11,
-          neighborhood: 'teste',
-          cep: 123456789,
+          cep: '123456789',
         },
       }),
     ).rejects.toThrow(ConflictException);
