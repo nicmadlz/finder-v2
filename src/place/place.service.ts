@@ -11,6 +11,7 @@ import { UpdatePlaceDto } from 'src/place/dto/UpdatePlace.dto';
 import { CreatePlaceDto } from 'src/place/dto/CreatePlace.dto';
 import { AddressEntity } from 'src/address/address.entity';
 import { AppGateway } from 'src/gateway/app.gateway';
+import { ViaCepService } from 'src/address/viaCep.service';
 
 @Injectable()
 export class PlaceService {
@@ -19,6 +20,7 @@ export class PlaceService {
     private readonly placeRepository: Repository<PlaceEntity>,
     @InjectRepository(AddressEntity)
     private readonly addressRepository: Repository<AddressEntity>,
+    private readonly viaCepService: ViaCepService,
     private appGateway: AppGateway,
   ) {}
 
@@ -55,7 +57,7 @@ export class PlaceService {
 
     const existAddress = await this.addressRepository.findOne({
       where: {
-        street: placeData.address.street,
+        cep: placeData.address.cep,
         number: placeData.address.number,
       },
     });
@@ -63,7 +65,15 @@ export class PlaceService {
       throw new ConflictException('This address has already been created!');
     }
 
-    const address = Object.assign(new AddressEntity(), placeData.address);
+    const viaCep = await this.viaCepService.search(placeData.address.cep);
+
+    const address = Object.assign(new AddressEntity(), {
+      street: viaCep.logradouro,
+      number: placeData.address.number,
+      neighborhood: viaCep.bairro,
+      cep: placeData.address.cep,
+    });
+
     const place = Object.assign(new PlaceEntity(), {
       name: placeData.name,
       category: placeData.category,
@@ -92,12 +102,18 @@ export class PlaceService {
         throw new ConflictException('This place name is already in use!');
       }
     }
-
     const { address: addressData, ...placeFields } = placeData;
     Object.assign(place, placeFields);
 
-    if (addressData) {
-      Object.assign(place.address, addressData);
+    if (addressData?.cep != undefined) {
+      const viaCep = await this.viaCepService.search(addressData.cep);
+      const updatedAddress = {
+        street: viaCep.logradouro,
+        number: addressData.number,
+        neighborhood: viaCep.bairro,
+        cep: addressData.cep,
+      };
+      Object.assign(place.address, updatedAddress);
     }
 
     try {

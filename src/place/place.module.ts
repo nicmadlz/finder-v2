@@ -6,12 +6,14 @@ import { PlaceEntity } from './place.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { GatewayModule } from 'src/gateway/gateway.module';
 import { AddressEntity } from 'src/address/address.entity';
+import { AddressModule } from 'src/address/address.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PlaceEntity, AddressEntity]),
     AuthModule,
     GatewayModule,
+    AddressModule,
   ],
   controllers: [PlaceController],
   providers: [PlaceService],
