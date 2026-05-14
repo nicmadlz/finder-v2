@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsPostalCode, Min } from 'class-validator';
 
 export class UpdateAddressDto {
   @ApiProperty({ description: 'Street number', example: 123, required: false })
@@ -13,9 +13,7 @@ export class UpdateAddressDto {
     example: 90010000,
     required: false,
   })
-  @IsNumber(undefined, { message: 'Cep must be a number' })
-  @Min(10000000, { message: 'Cep must have 8 digits' })
-  @Max(99999999, { message: 'Cep must have 8 digits' })
+  @IsPostalCode('BR')
   @IsOptional()
   cep?: string;
 }
