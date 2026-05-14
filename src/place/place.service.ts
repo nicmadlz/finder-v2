@@ -86,7 +86,8 @@ export class PlaceService {
       const result = await this.placeRepository.save(place);
       this.appGateway.sendPlaceUpdate(result);
       return result;
-    } catch {
+    } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException('Failed to create place!');
     }
   }
