@@ -22,6 +22,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { UpdateRoleDto } from './dto/UpdateRole.dto';
 import { HttpCode } from '@nestjs/common';
+import { UpdatePasswordDto } from './dto/UpdatePassword.dto';
 
 @ApiTags('Auth')
 @Controller('/auth')
@@ -60,8 +61,16 @@ export class AuthController {
     const token = await this.authService.loginUser(loginUserData);
 
     return {
-      token: token,
-      message: "You're logged in!",
+      response: token,
+    };
+  }
+
+  @Post('/changePassword')
+  async changePassword(@Body() userData: UpdatePasswordDto) {
+    const message = await this.authService.changePassword(userData);
+
+    return {
+      message: message,
     };
   }
 

@@ -13,6 +13,9 @@ import { CreateUserDto } from './dto/CreateUser.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginUserDto } from './dto/LoginUser.dto';
 import { UpdateRoleDto } from './dto/UpdateRole.dto';
+import { MailService } from './mail.service';
+import crypto from 'crypto';
+import { UpdatePasswordDto } from './dto/UpdatePassword.dto';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,7 @@ export class AuthService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   private async findUserByEmail(email: string) {
@@ -36,17 +40,23 @@ export class AuthService {
       throw new ConflictException('This email is already in use!');
     }
 
-    const cryptoPassword = await bcrypt.hash(userData.password, 10);
+    const randomPassword = crypto.randomBytes(8).toString('hex');
+    const hashRandomPassword = await bcrypt.hash(randomPassword, 10);
 
     const user = Object.assign(new UserEntity(), {
       name: userData.name,
       email: userData.email,
-      password: cryptoPassword,
+      password: hashRandomPassword,
     });
 
     try {
-      return await this.userRepository.save(user);
-    } catch {
+      const createdUser = await this.userRepository.save(user);
+      user.password = randomPassword;
+      await this.mailService.sendPasswordEmail(user);
+
+      return createdUser;
+    } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException('Failed to register user');
     }
   }
@@ -65,8 +75,37 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: exist.id, email: exist.email, role: exist.role };
-    return this.jwtService.sign(payload);
+    if (!exist.need_to_change_password) {
+      const payload = { sub: exist.id, email: exist.email, role: exist.role };
+      return this.jwtService.sign(payload);
+    }
+
+    return `You need to change your password to login!`;
+  }
+
+  async changePassword(userData: UpdatePasswordDto) {
+    const exist = await this.findUserByEmail(userData.email);
+    if (!exist) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordCompare = await bcrypt.compare(
+      userData.generatedPassword,
+      exist.password,
+    );
+    if (!passwordCompare) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const cryptoPassword = await bcrypt.hash(userData.newPassword, 10);
+    try {
+      await this.userRepository.update(exist.id, {
+        password: cryptoPassword,
+        need_to_change_password: false,
+      });
+      return 'You changed your password!';
+    } catch {
+      throw new InternalServerErrorException('Error to change your password');
+    }
   }
 
   async updateRole(id: string, updatedRole: UpdateRoleDto) {

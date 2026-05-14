@@ -13,6 +13,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -24,6 +25,20 @@ import { APP_GUARD } from '@nestjs/core';
     GatewayModule,
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.SANDBOX_HOST,
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.SANDBOX_USERNAME,
+          pass: process.env.SANDBOX_PASSWORD,
+        },
+      },
+      defaults: {
+        from: '"No Reply" <noreply@finder.com>',
+      },
     }),
     ThrottlerModule.forRoot([
       {

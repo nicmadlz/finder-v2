@@ -17,4 +17,7 @@ export class UserEntity {
 
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role!: Role;
+
+  @Column({ type: 'boolean' })
+  need_to_change_password = true;
 }
