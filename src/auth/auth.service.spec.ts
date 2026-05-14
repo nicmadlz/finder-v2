@@ -6,6 +6,12 @@ import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+jest.mock('bcrypt', () => ({
+  ...jest.requireActual('bcrypt'),
+  compare: jest.fn(),
+}));
+
 describe('AuthService', () => {
   let authService: AuthService;
 
@@ -101,12 +107,12 @@ describe('AuthService', () => {
       password: 'hashedPassword',
     } as UserEntity);
 
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
     jest.spyOn(authService['jwtService'], 'sign').mockReturnValue('fake-token');
 
     await expect(
       authService.loginUser({ email: 'test@test.com', password: '123456' }),
-    ).resolves.toMatchObject({ accessToken: 'fake-token' });
+    ).resolves.toBe('fake-token');
   });
 });
