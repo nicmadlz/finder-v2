@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Request,
   UseGuards,
@@ -30,5 +31,18 @@ export class EventController {
   @Get()
   async listEvents() {
     return await this.eventService.listEvents();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/:id/attend')
+  async attendsAnEvent(
+    @Param('id') id: number,
+    @Request() req: { user: JwtPayload },
+  ) {
+    const user = req.user;
+
+    const response = await this.eventService.attendAnEvent(+id, user);
+
+    return response;
   }
 }
