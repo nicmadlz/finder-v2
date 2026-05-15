@@ -1,4 +1,11 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { CreateEventDto } from './dto/CreateEvent.dto';
 import { JwtAuthGuard, JwtPayload } from 'src/auth/guards/jwt-auth.guard';
 import { EventService } from './event.service';
@@ -18,5 +25,10 @@ export class EventController {
     const response = await this.eventService.createEvent(eventData, user);
 
     return response;
+  }
+
+  @Get()
+  async listEvents() {
+    return await this.eventService.listEvents();
   }
 }

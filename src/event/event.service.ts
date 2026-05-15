@@ -58,4 +58,13 @@ export class EventService {
       throw new InternalServerErrorException('Failed to create event!');
     }
   }
+
+  async listEvents() {
+    try {
+      return await this.eventRepository.find({ relations: ['place'] });
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException('Failed to list events');
+    }
+  }
 }
