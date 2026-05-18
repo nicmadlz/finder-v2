@@ -34,6 +34,23 @@ export class EventService {
       throw new NotFoundException('This place doesn`t exist!');
     }
 
+    const userAttendances = await this.attendanceRepository.find({
+      where: { user: { id: user.sub } },
+      relations: ['event'],
+    });
+
+    const newStart = new Date(eventData.start_at).getTime();
+    const newEnd = newStart + eventData.duration_minutes * 60000;
+
+    for (const attendance of userAttendances) {
+      const existingStart = new Date(attendance.event.start_at).getTime();
+      const existingEnd =
+        existingStart + attendance.event.duration_minutes * 60000;
+
+      if (newStart < existingEnd && newEnd > existingStart) {
+        throw new ConflictException('You already have an event at this time!');
+      }
+    }
     const event = Object.assign(new EventEntity(), {
       name: eventData.name,
       description: eventData.description,
@@ -91,19 +108,15 @@ export class EventService {
       relations: ['event'],
     });
 
-    const newEnd =
-      new Date(eventExist.start_at).getTime() +
-      eventExist.duration_minutes * 60000;
+    const newStart = new Date(eventExist.start_at).getTime();
+    const newEnd = newStart + eventExist.duration_minutes * 60000;
 
     for (const attendance of userAttendances) {
       const existingStart = new Date(attendance.event.start_at).getTime();
       const existingEnd =
         existingStart + attendance.event.duration_minutes * 60000;
 
-      if (
-        eventExist.start_at.getTime() < existingEnd &&
-        newEnd > existingStart
-      ) {
+      if (newStart < existingEnd && newEnd > existingStart) {
         throw new ConflictException('You already have an event at this time!');
       }
     }
