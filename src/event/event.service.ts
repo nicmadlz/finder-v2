@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -135,5 +136,29 @@ export class EventService {
         'Failed to attend you to the event!',
       );
     }
+  }
+
+  async deleteEventAttend(eventId: number, user: JwtPayload) {
+    const eventExist = await this.eventRepository.findOne({
+      where: { id: eventId },
+    });
+
+    if (!eventExist) {
+      throw new NotFoundException('This event doesn`t exists');
+    }
+
+    const attendance = await this.attendanceRepository.findOne({
+      where: { user: { id: user.sub }, event: { id: eventId } },
+    });
+
+    if (!attendance) {
+      throw new NotFoundException('You are not registered in this event!');
+    }
+
+    if (attendance.role !== Role.ATTENDEE) {
+      throw new ForbiddenException('You are the creator of the event!');
+    }
+
+    return await this.attendanceRepository.remove(attendance);
   }
 }

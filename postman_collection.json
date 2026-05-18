@@ -1,0 +1,339 @@
+{
+  "info": {
+    "name": "finder-v2",
+    "description": "Postman collection for the finder-v2 NestJS API. Set the `baseUrl` and `token` variables before running requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "5f7b1f9e-1a2b-4c3d-9e8f-7a6b5c4d3e2f"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"StrongP@ssw0rd\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/changePassword",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "changePassword"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"generatedPassword\": \"TempP@ssw0rd\",\n  \"newPassword\": \"StrongP@ssw0rd\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update user role (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/:id/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", ":id", "role"],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Admin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List users (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Places",
+      "item": [
+        {
+          "name": "Create place (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/places",
+              "host": ["{{baseUrl}}"],
+              "path": ["places"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Café do Mercado\",\n  \"category\": \"Restaurant\",\n  \"priceRange\": 3,\n  \"rating\": 4.5,\n  \"address\": {\n    \"number\": 123,\n    \"cep\": \"90010000\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "List places (paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/places?page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["places"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get place by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/places/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["places", ":id"],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update place (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/places/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["places", ":id"],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Café do Mercado\",\n  \"category\": \"Restaurant\",\n  \"priceRange\": 3,\n  \"rating\": 4.5,\n  \"address\": {\n    \"number\": 456,\n    \"cep\": \"90010001\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete place (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/places/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["places", ":id"],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Addresses",
+      "item": [
+        {
+          "name": "List addresses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/addresses",
+              "host": ["{{baseUrl}}"],
+              "path": ["addresses"]
+            }
+          }
+        },
+        {
+          "name": "Get address by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/addresses/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["addresses", ":id"],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update address (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/addresses/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["addresses", ":id"],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": 456,\n  \"cep\": \"90010001\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Create event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Coffee Tasting\",\n  \"start_at\": \"2026-06-01T19:00:00\",\n  \"duration_minutes\": 90,\n  \"max_capacity\": 20,\n  \"place_id\": 1,\n  \"description\": \"An evening of specialty coffee tasting at Café do Mercado.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            }
+          }
+        },
+        {
+          "name": "Attend an event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/:id/attend",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", ":id", "attend"],
+              "variable": [
+                { "key": "id", "value": "1" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "External Places",
+      "item": [
+        {
+          "name": "Search external places",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/external-places?q=café&city=Porto Alegre",
+              "host": ["{{baseUrl}}"],
+              "path": ["external-places"],
+              "query": [
+                { "key": "q", "value": "café" },
+                { "key": "city", "value": "Porto Alegre" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

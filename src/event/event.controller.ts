@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -42,6 +43,19 @@ export class EventController {
     const user = req.user;
 
     const response = await this.eventService.attendAnEvent(+id, user);
+
+    return response;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:id/attend')
+  async deleteAttendsAnEvent(
+    @Param('id') id: number,
+    @Request() req: { user: JwtPayload },
+  ) {
+    const user = req.user;
+
+    const response = await this.eventService.deleteEventAttend(+id, user);
 
     return response;
   }
