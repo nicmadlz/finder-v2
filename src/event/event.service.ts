@@ -15,6 +15,7 @@ import { JwtPayload } from 'src/auth/guards/jwt-auth.guard';
 import { UserEntity } from 'src/auth/user.entity';
 import { Role } from './enums/role.enum';
 import { MailService } from 'src/auth/mail.service';
+import { UpdateEventDto } from './dto/UpdateEvent.dto';
 
 @Injectable()
 export class EventService {
@@ -195,5 +196,33 @@ export class EventService {
     }
 
     return await this.eventRepository.delete(eventId);
+  }
+
+  async updateEvent(
+    eventId: number,
+    user: JwtPayload,
+    eventBody: UpdateEventDto,
+  ) {
+    const eventExist = await this.eventRepository.findOne({
+      where: { id: eventId },
+    });
+
+    if (!eventExist) {
+      throw new NotFoundException('This event doesn`t exists');
+    }
+
+    const attendance = await this.attendanceRepository.findOne({
+      where: { user: { id: user.sub }, event: { id: eventId } },
+    });
+
+    if (!attendance && user.role !== 'admin') {
+      throw new NotFoundException('You are not registered in this event!');
+    }
+
+    if (attendance?.role !== Role.CREATOR && user.role !== 'admin') {
+      throw new ForbiddenException('You are not the creator of the event!');
+    }
+
+    return await this.eventRepository.update(eventId, eventBody);
   }
 }

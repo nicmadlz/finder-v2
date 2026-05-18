@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Request,
   UseGuards,
@@ -11,6 +12,7 @@ import {
 import { CreateEventDto } from './dto/CreateEvent.dto';
 import { JwtAuthGuard, JwtPayload } from 'src/auth/guards/jwt-auth.guard';
 import { EventService } from './event.service';
+import { UpdateEventDto } from './dto/UpdateEvent.dto';
 
 @Controller('/events')
 export class EventController {
@@ -67,8 +69,20 @@ export class EventController {
     @Request() req: { user: JwtPayload },
   ) {
     const user = req.user;
-    const response = await this.eventService.deleteEvent(id, user);
+    const response = await this.eventService.deleteEvent(+id, user);
 
+    return response;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/:id')
+  async updateEvent(
+    @Param('id') id: number,
+    @Request() req: { user: JwtPayload },
+    @Body() eventBody: UpdateEventDto,
+  ) {
+    const user = req.user;
+    const response = await this.eventService.updateEvent(+id, user, eventBody);
     return response;
   }
 }
