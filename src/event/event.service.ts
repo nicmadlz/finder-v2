@@ -14,6 +14,7 @@ import { PlaceEntity } from 'src/place/place.entity';
 import { JwtPayload } from 'src/auth/guards/jwt-auth.guard';
 import { UserEntity } from 'src/auth/user.entity';
 import { Role } from './enums/role.enum';
+import { MailService } from 'src/auth/mail.service';
 
 @Injectable()
 export class EventService {
@@ -24,6 +25,7 @@ export class EventService {
     private readonly attendanceRepository: Repository<AttendanceEntity>,
     @InjectRepository(PlaceEntity)
     private readonly placeRepository: Repository<PlaceEntity>,
+    private readonly mailService: MailService,
   ) {}
 
   async createEvent(eventData: CreateEventDto, user: JwtPayload) {
@@ -175,12 +177,21 @@ export class EventService {
       where: { user: { id: user.sub }, event: { id: eventId } },
     });
 
-    if (!attendance) {
+    if (!attendance && user.role !== 'admin') {
       throw new NotFoundException('You are not registered in this event!');
     }
 
-    if (attendance.role !== Role.CREATOR) {
+    if (attendance?.role !== Role.CREATOR && user.role !== 'admin') {
       throw new ForbiddenException('You are not the creator of the event!');
+    }
+
+    const attendances = await this.attendanceRepository.find({
+      where: { event: { id: eventId }, role: Role.ATTENDEE },
+      relations: ['user'],
+    });
+
+    for (const attendance of attendances) {
+      await this.mailService.sendDeletedEvent(attendance.user, eventExist.name);
     }
 
     return await this.eventRepository.delete(eventId);

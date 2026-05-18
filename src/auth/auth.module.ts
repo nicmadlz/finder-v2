@@ -23,6 +23,6 @@ import { MailService } from './mail.service';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, MailService],
-  exports: [JwtAuthGuard, JwtModule],
+  exports: [JwtAuthGuard, JwtModule, MailService],
 })
 export class AuthModule {}
