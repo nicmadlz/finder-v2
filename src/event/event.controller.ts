@@ -59,4 +59,16 @@ export class EventController {
 
     return response;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:id')
+  async deleteEvent(
+    @Param('id') id: number,
+    @Request() req: { user: JwtPayload },
+  ) {
+    const user = req.user;
+    const response = await this.eventService.deleteEvent(id, user);
+
+    return response;
+  }
 }
