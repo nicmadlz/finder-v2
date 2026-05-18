@@ -1,12 +1,12 @@
 # Finder
 
-A REST API for discovering places in Porto Alegre — cafes, restaurants, bars, parties, and more.
+A REST API for discovering places in Porto Alegre — cafes, restaurants, bars, parties, and more — and organizing events at them.
 
 ---
 
 ## Overview
 
-Finder exposes a place catalogue with authentication, role-based access control, and real-time updates. It integrates with an external places provider to enrich the local catalogue and uses a background queue to keep data in sync.
+Finder exposes a place catalogue with authentication, role-based access control, and real-time updates. Authenticated users can also create events tied to those places, RSVP to other users' events, and receive email notifications when relevant changes happen. It integrates with an external places provider to enrich the local catalogue and uses a background queue to keep data in sync.
 
 Full API reference is generated from the code and available through Swagger UI once the application is running (see [API Documentation](#api-documentation)).
 
@@ -14,8 +14,11 @@ Full API reference is generated from the code and available through Swagger UI o
 
 ## Features
 
-- **Authentication & Authorization** — JWT-based login with role-based access control (`user` / `admin`).
-- **Places & Addresses** — full CRUD with paginated listing.
+- **Authentication & Authorization** — JWT-based login with role-based access control (`user` / `admin`). Registration emails the user a generated temporary password.
+- **Password Reset** — users can change their password through a dedicated endpoint.
+- **Places & Addresses** — full CRUD with paginated listing. Addresses are enriched via the [ViaCEP](https://viacep.com.br/) service from a Brazilian postal code (CEP).
+- **Events & Attendance** — authenticated users can create events at a place, list events, RSVP (attend), unsubscribe, update, or delete their own events. The event creator and admins can update or delete an event; when an event is deleted, all subscribed attendees are notified by email. Time-overlap checks prevent a user from being booked into two simultaneous events.
+- **Email Notifications** — transactional emails via `@nestjs-modules/mailer` (Nodemailer) for registration passwords and event deletions.
 - **External Places Search** — proxy to an external provider for discovery beyond the local catalogue.
 - **Caching** — Redis-backed response cache on read endpoints.
 - **Background Jobs** — recurring synchronization with the external provider via BullMQ.
@@ -36,6 +39,8 @@ Full API reference is generated from the code and available through Swagger UI o
 | Cache & Queues   | Redis + BullMQ                          |
 | Authentication   | JWT (`@nestjs/jwt`, Passport) + bcrypt  |
 | Real-time        | Socket.IO (`@nestjs/websockets`)        |
+| Mail             | `@nestjs-modules/mailer` + Nodemailer   |
+| External APIs    | ViaCEP (address lookup)                 |
 | Validation       | class-validator, class-transformer      |
 | Documentation    | Swagger (`@nestjs/swagger`)             |
 | Testing          | Jest (unit) + Supertest (e2e)           |
@@ -78,6 +83,11 @@ DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_NAME=finder
 
+# Test database (used by e2e tests and `npm run migration:run:test`)
+DB_TEST_HOST=127.0.0.1
+DB_TEST_PORT=5433
+DB_TEST_NAME=finder_test
+
 # pgAdmin (optional)
 DB_ADMIN_EMAIL=admin@example.com
 
@@ -93,6 +103,11 @@ CORS_ORIGIN=http://localhost:3000
 # Admin seed — credentials used by `npm run seed` to create the initial admin user
 ADMIN_EMAIL=admin@finder.com
 ADMIN_PASSWORD=change_me
+
+# SMTP — used to send transactional emails (e.g. Mailtrap sandbox)
+SANDBOX_HOST=sandbox.smtp.mailtrap.io
+SANDBOX_USERNAME=your_smtp_username
+SANDBOX_PASSWORD=your_smtp_password
 ```
 
 > The seed script creates the admin only if no admin user exists yet, so it is safe to re-run. Change `ADMIN_EMAIL` / `ADMIN_PASSWORD` before running it in any non-local environment.
@@ -160,6 +175,21 @@ Tokens are obtained via `POST /auth/login`. Admin-only endpoints additionally re
 
 ---
 
+## Events
+
+Events are organized by authenticated users at an existing place.
+
+| Method | Endpoint                  | Auth          | Description                                                                 |
+| ------ | ------------------------- | ------------- | --------------------------------------------------------------------------- |
+| POST   | `/events`                 | User          | Create an event at a place. The creator is automatically registered.        |
+| GET    | `/events`                 | Public        | List all events (includes the place relation).                              |
+| POST   | `/events/:id/attend`      | User          | RSVP to an event. Rejected if the event is full or overlaps another RSVP.   |
+| DELETE | `/events/:id/attend`      | User          | Unsubscribe from an event you are attending (creators cannot unsubscribe).  |
+| PATCH  | `/events/:id`             | Creator/Admin | Update an event. Only the creator or an admin can update.                   |
+| DELETE | `/events/:id`             | Creator/Admin | Delete an event. All attendees are notified by email.                       |
+
+---
+
 ## Database Migrations
 
 ```bash
@@ -202,10 +232,11 @@ End-to-end tests run against the dedicated `postgres-test` container exposed on 
 
 ```
 src/
-├── address/             # Address module (entity, DTOs, controller, service)
-├── auth/                # Authentication, roles, guards, decorators
+├── address/             # Address module (entity, DTOs, controller, service, ViaCEP integration)
+├── auth/                # Authentication, roles, guards, decorators, mail service
 ├── common/              # Shared interceptors and utilities
 ├── config/              # TypeORM data source, migrations, seeds
+├── event/               # Event module (events, attendance, roles)
 ├── external-places/     # External provider integration
 ├── filters/             # Global exception filter
 ├── gateway/             # WebSocket gateway (real-time updates)
