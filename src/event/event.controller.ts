@@ -49,13 +49,13 @@ export class EventController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('/:id/attend')
-  async deleteAttendsAnEvent(
+  async unSubscribe(
     @Param('id') id: number,
     @Request() req: { user: JwtPayload },
   ) {
     const user = req.user;
 
-    const response = await this.eventService.deleteEventAttend(+id, user);
+    const response = await this.eventService.unSubscribe(+id, user);
 
     return response;
   }

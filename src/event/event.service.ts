@@ -138,7 +138,7 @@ export class EventService {
     }
   }
 
-  async deleteEventAttend(eventId: number, user: JwtPayload) {
+  async unSubscribe(eventId: number, user: JwtPayload) {
     const eventExist = await this.eventRepository.findOne({
       where: { id: eventId },
     });
