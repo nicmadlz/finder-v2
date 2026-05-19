@@ -35,6 +35,9 @@ export class AuthService {
   }
 
   async registerUser(userData: CreateUserDto) {
+    const userCount = await this.userRepository.count();
+    const role = userCount === 0 ? 'admin' : 'user';
+
     const exist = await this.findUserByEmail(userData.email);
     if (exist) {
       throw new ConflictException('This email is already in use!');
@@ -47,6 +50,7 @@ export class AuthService {
       name: userData.name,
       email: userData.email,
       password: hashRandomPassword,
+      role: role,
     });
 
     try {
