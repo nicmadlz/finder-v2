@@ -34,6 +34,7 @@ export class PlaceEntity {
     cascade: true,
     eager: true,
     orphanedRowAction: 'delete',
+    onDelete: 'CASCADE',
   })
   @JoinColumn()
   address!: AddressEntity;
