@@ -18,15 +18,15 @@ import {
   Cache,
   CACHE_MANAGER,
 } from '@nestjs/cache-manager';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
+import {
+  ApiListAddresses,
+  ApiFindAddress,
+  ApiUpdateAddress,
+} from './decorators/address-api.decorator';
 
 @ApiTags('Addresses')
 @Controller('/addresses')
@@ -36,8 +36,7 @@ export class AddressController {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  @ApiOperation({ summary: 'List all addresses' })
-  @ApiResponse({ status: 200, description: 'Returns the list of addresses' })
+  @ApiListAddresses()
   @UseInterceptors(CacheInterceptor)
   @CacheKey('address:list')
   @CacheTTL(60)
@@ -46,9 +45,7 @@ export class AddressController {
     return await this.addressService.listAddresses();
   }
 
-  @ApiOperation({ summary: 'Get an address by ID' })
-  @ApiResponse({ status: 200, description: 'Returns the address' })
-  @ApiResponse({ status: 404, description: 'Address not found' })
+  @ApiFindAddress()
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(60)
   @Get('/:id')
@@ -56,15 +53,7 @@ export class AddressController {
     return await this.addressService.findAddress(id);
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update an address by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the updated address and a success message',
-  })
-  @ApiResponse({ status: 400, description: 'Invalid request body' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Address not found' })
+  @ApiUpdateAddress()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Put('/:id')
