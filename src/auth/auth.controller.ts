@@ -24,7 +24,7 @@ import {
   ApiListUsers,
   ApiLoginUser,
   ApiRegisterUser,
-} from './decorators/auth-api.decorators';
+} from './decorators/auth-api.decorator';
 
 @ApiTags('Auth')
 @Controller('/auth')

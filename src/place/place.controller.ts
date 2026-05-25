@@ -32,7 +32,7 @@ import {
   ApiFindPlace,
   ApiUpdatePlace,
   ApiDeletePlace,
-} from './decorators/place-api.decorators';
+} from './decorators/place-api.decorator';
 
 @ApiTags('Places')
 @Controller('/places')
