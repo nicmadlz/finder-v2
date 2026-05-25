@@ -22,16 +22,17 @@ import {
   CacheTTL,
   Cache,
 } from '@nestjs/cache-manager';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { PlaceEntity } from './place.entity';
+import {
+  ApiCreatePlace,
+  ApiListPlaces,
+  ApiFindPlace,
+  ApiUpdatePlace,
+  ApiDeletePlace,
+} from './decorators/place-api.decorators';
 
 @ApiTags('Places')
 @Controller('/places')
@@ -41,13 +42,7 @@ export class PlaceController {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a place' })
-  @ApiResponse({
-    status: 201,
-    description: 'Returns the created place and a success message',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiCreatePlace()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Post()
@@ -58,8 +53,7 @@ export class PlaceController {
     return { createdPlace, message: 'Place created!' };
   }
 
-  @ApiOperation({ summary: 'List all places with pagination' })
-  @ApiResponse({ status: 200, description: 'Returns paginated list of places' })
+  @ApiListPlaces()
   @UseInterceptors(CacheInterceptor)
   @CacheKey('places:list')
   @CacheTTL(60)
@@ -68,13 +62,7 @@ export class PlaceController {
     return await this.placeService.listPlaces(+page, +pageSize);
   }
 
-  @ApiOperation({ summary: 'Get a place by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the place',
-    type: PlaceEntity,
-  })
-  @ApiResponse({ status: 404, description: 'Place not found' })
+  @ApiFindPlace()
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(60)
   @Get('/:id')
@@ -82,14 +70,7 @@ export class PlaceController {
     return await this.placeService.findPlace(id);
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update a place by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the updated place and a success message',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Place not found' })
+  @ApiUpdatePlace()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Put('/:id')
@@ -104,14 +85,7 @@ export class PlaceController {
     return { place: updatedPlace, message: 'Place updated!' };
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete a place by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the deleted place and a success message',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'Place not found' })
+  @ApiDeletePlace()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Delete('/:id')
